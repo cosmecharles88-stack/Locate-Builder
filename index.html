@@ -116,7 +116,17 @@ function extractNotes(text){const notes=[]; if(/holding water|ponding/i.test(tex
 function guessIntersection(location){const lower=location.toLowerCase(); if(lower.includes(' at '))return location.replace(/.*?([A-Za-z0-9 ]+ at [A-Za-z0-9 ]+).*/i,'$1').replace(/ at /i,' & '); if(lower.includes('burnley')&&lower.includes('prescott'))return'Burnley & Prescott'; if(lower.includes('prescott')&&lower.includes('wembley'))return'Prescott & Wembley'; if(lower.includes('bonny bank')&&lower.includes('lindsay'))return'Bonny Bank & Lindsay Gardens'; if(lower.includes('broughton')&&lower.includes('telford'))return'Broughton & Telford'; return''}
 function deriveStartEndFromLocation(location){const city=getSelectValue('city')||''; const state='TX'; const text=location||''; let m=text.match(/(\d{3,6})\s*[-–]\s*(\d{3,6})\s+([A-Za-z ]+)/i); if(m)return{start:`${m[1]} ${m[3].trim()}, ${city}, ${state}`,end:`${m[2]} ${m[3].trim()}, ${city}, ${state}`}; m=text.match(/(\d{3,6})\s+([A-Za-z ]+)\s+through\s+(\d{3,6})\s+([A-Za-z ]+)/i); if(m)return{start:`${m[1]} ${m[2].trim()}, ${city}, ${state}`,end:`${m[3]} ${m[4].trim()}, ${city}, ${state}`}; m=text.match(/(\d{3,6})\s+([A-Za-z ]+).*?(\d{3,6})\s+([A-Za-z ]+)/i); if(m)return{start:`${m[1]} ${m[2].trim()}, ${city}, ${state}`,end:`${m[3]} ${m[4].trim()}, ${city}, ${state}`}; m=text.match(/(\d{3,6})\s+([A-Za-z ]+)/); if(m){const addr=`${m[1]} ${m[2].trim()}, ${city}, ${state}`; return{start:addr,end:addr}} const inter=guessIntersection(text); if(inter)return{start:`${inter}, ${city}, ${state}`,end:`${inter}, ${city}, ${state}`}; return{start:text?`${text}, ${city}, ${state}`:'',end:text?`${text}, ${city}, ${state}`:''}}
 function inferDirectionFromText(text){const l=(text||'').toLowerCase(); if(l.includes('east'))return'eastbound / east along the listed roadway'; if(l.includes('west'))return'westbound / west along the listed roadway'; if(l.includes('north'))return'northbound / north along the listed roadway'; if(l.includes('south'))return'southbound / south along the listed roadway'; return''}
+function estimateDistanceFeet(startText,endText){const start=parseLatLng(startText),end=parseLatLng(endText); if(!start||!end)return''; const R=6371000; const dLat=toRad(end.lat-start.lat); const dLng=toRad(end.lng-start.lng); const a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(toRad(start.lat))*Math.cos(toRad(end.lat))*Math.sin(dLng/2)*Math.sin(dLng/2); const c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)); const meters=R*c; return Math.round(meters*3.28084)}
+function cardinalFromBearing(bearing){if(bearing>=337.5||bearing<22.5)return'north'; if(bearing<67.5)return'northeast'; if(bearing<112.5)return'east'; if(bearing<157.5)return'southeast'; if(bearing<202.5)return'south'; if(bearing<247.5)return'southwest'; if(bearing<292.5)return'west'; return'northwest'}
+function buildDrivingDirections(item,buffered){const intersection=item.nearestIntersection||'nearest major intersection'; const start=parseLatLng(buffered.start||item.gpsStart); const end=parseLatLng(buffered.end||item.gpsEnd); if(!start||!end)return`From ${intersection}, proceed to the described work area and locate between the listed BEGIN LOCATE and END LOCATE points.`; const bearing=bearingDegrees(start,end); const direction=cardinalFromBearing(bearing); const distance=estimateDistanceFeet(buffered.start||item.gpsStart,buffered.end||item.gpsEnd)||item.linearFeet||'field measured'; return`From ${intersection}, proceed toward the work area and begin locate at GPS ${buffered.start}. Continue approximately ${distance} LF ${direction} along the roadway to GPS ${buffered.end}. Mark both sides and adjacent right-of-way within the described limits.`}
 function estimateLfFromDimensions(dimensions){if(!dimensions)return''; const matches=[...dimensions.matchAll(/(\d+)\s*x\s*(\d+)/gi)]; if(!matches.length)return''; return String(matches.reduce((sum,m)=>sum+Math.max(parseInt(m[1],10),parseInt(m[2],10)),0))}
+function parseLatLng(value){if(!value)return null; const parts=String(value).split(',').map(x=>parseFloat(x.trim())); if(parts.length!==2||Number.isNaN(parts[0])||Number.isNaN(parts[1]))return null; return{lat:parts[0],lng:parts[1]}}
+function toRad(deg){return deg*Math.PI/180}
+function toDeg(rad){return rad*180/Math.PI}
+function bearingDegrees(start,end){const lat1=toRad(start.lat),lat2=toRad(end.lat),dLng=toRad(end.lng-start.lng); const y=Math.sin(dLng)*Math.cos(lat2); const x=Math.cos(lat1)*Math.sin(lat2)-Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLng); return(toDeg(Math.atan2(y,x))+360)%360}
+function offsetPoint(point,bearing,feet){const meters=feet*0.3048; const earth=6378137; const angular=meters/earth; const brng=toRad(bearing); const lat1=toRad(point.lat); const lng1=toRad(point.lng); const lat2=Math.asin(Math.sin(lat1)*Math.cos(angular)+Math.cos(lat1)*Math.sin(angular)*Math.cos(brng)); const lng2=lng1+Math.atan2(Math.sin(brng)*Math.sin(angular)*Math.cos(lat1),Math.cos(angular)-Math.sin(lat1)*Math.sin(lat2)); return{lat:toDeg(lat2),lng:toDeg(lng2)}}
+function formatLatLng(point){return point.lat.toFixed(6)+','+point.lng.toFixed(6)}
+function getBufferedGps(startText,endText,bufferFeet){const start=parseLatLng(startText),end=parseLatLng(endText); if(!start||!end||!bufferFeet)return{start:startText,end:endText,applied:false}; const same=Math.abs(start.lat-end.lat)<0.000001&&Math.abs(start.lng-end.lng)<0.000001; if(same)return{start:startText,end:endText,applied:false}; const bearing=bearingDegrees(start,end); const bufferedStart=offsetPoint(start,(bearing+180)%360,bufferFeet); const bufferedEnd=offsetPoint(end,bearing,bufferFeet); return{start:formatLatLng(bufferedStart),end:formatLatLng(bufferedEnd),applied:true,bearing:bearing.toFixed(1)}}
 function uniqueText(existing,added){const parts=[...(existing||'').split(', '),...(added||'').split(', ')].map(x=>x.trim()).filter(Boolean); return[...new Set(parts)].join(', ')}
 function autoAssignZones(shouldRender=true){locations=locations.map(item=>{const lower=item.location.toLowerCase();let zone='Zone D - Other Work Areas'; if(lower.includes('burnley')||lower.includes('prescott')||lower.includes('wembley'))zone='Zone A - Burnley / Prescott / Wembley'; if(lower.includes('bonny bank')||lower.includes('lindsay'))zone='Zone B - Bonny Bank / Lindsay Gardens'; if(lower.includes('wakefield')||lower.includes('darcy'))zone='Zone C - Wakefield / Darcy'; if(lower.includes('broughton')||lower.includes('telford')||lower.includes('kirkfield')||lower.includes('birmington'))zone='Zone D - Broughton / Kirkfield / Birmington'; return{...item,zone}}); if(shouldRender){renderLocations();renderSummary();updateZoneSelect();}}
 function loadGoogleMaps(key){if(window.google&&window.google.maps&&window.google.maps.Geocoder)return Promise.resolve(); if(googleMapsLoadPromise)return googleMapsLoadPromise; googleMapsLoadPromise=new Promise((resolve,reject)=>{const cb=`initKkeGoogleMaps_${Date.now()}`; window[cb]=()=>{delete window[cb];resolve()}; const s=document.createElement('script'); s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&callback=${cb}`; s.async=true; s.defer=true; s.onerror=()=>reject(new Error('Google Maps JavaScript API failed to load.')); document.head.appendChild(s);}); return googleMapsLoadPromise;}
@@ -133,8 +143,63 @@ function addManualRow(){locations.push({id:crypto.randomUUID?crypto.randomUUID()
 function updateZoneSelect(){const select=$('zoneSelect'); const zones=[...new Set(locations.map(x=>x.zone||'Unassigned'))]; select.innerHTML=zones.map(z=>`<option value="${escapeHtml(z)}">${escapeHtml(z)}</option>`).join('')}
 function generateLocateForSelectedZone(){const zone=$('zoneSelect').value; const zoneItems=locations.filter(x=>(x.zone||'Unassigned')===zone); window.generatedLocateText=buildLocateText(zone,zoneItems); setCopyStatus(`Generated locate text for ${zone}. Click Copy Locate Text.`)}
 function generateAllZones(){const zones=[...new Set(locations.map(x=>x.zone||'Unassigned'))]; window.generatedLocateText=zones.map(zone=>buildLocateText(zone,locations.filter(x=>(x.zone||'Unassigned')===zone))).join('\n\n------------------------------------------------------------\n\n')||''; setCopyStatus(`Generated locate text for ${zones.length} zone(s). Click Copy Locate Text.`)}
-function buildLocateText(zone,items){const projectName=getSelectValue('projectName')||'KKE Project',city=getSelectValue('city')||'',county=getSelectValue('county')||'',poNumber=getSelectValue('poNumber')||'',ticketType=getSelectValue('ticketType')||'Normal',natureOfWork=getSelectValue('natureOfWork')||'',workDoneFor=getSelectValue('workDoneFor')||'',duration=getSelectValue('duration')||'',defaultLane=getSelectValue('defaultLane')||'',globalDirections=getSelectValue('globalDirections')||'',startDate=getSelectValue('startDate'),locateBuffer=parseInt(getSelectValue('locateBuffer')||'20',10)||0; const limits=items.map((item,index)=>{const start=item.gpsStart?`GPS ${item.gpsStart} near ${item.startPoint||item.location}`:`${item.startPoint||item.location} [GPS NEEDS REVIEW]`; const end=item.gpsEnd?`GPS ${item.gpsEnd} near ${item.endPoint||item.location}`:`${item.endPoint||item.location} [GPS NEEDS REVIEW]`; const baseLf=parseInt(item.linearFeet||estimateLfFromDimensions(item.dimensions)||'0',10)||0; const totalLf=baseLf+(locateBuffer*2); return `${index+1}. BEGIN LOCATE at ${start}. Continue ${item.direction||'along the listed roadway'} approximately ${totalLf||'field-measured distance'} LF total coverage (includes ${locateBuffer} ft buffer before and after work area) to END LOCATE at ${end}. Locate width: ${item.locateWidth||'15 ft each side of work area'}. Side of roadway: ${item.sideOfRoad||'Both Sides'}.`}).join('\n'); const workLocations=items.map((item,index)=>`${index+1}. ${item.location} — ${item.methodTypes.join(' + ')}${item.dimensions?` | Dimensions: ${item.dimensions}`:''}${item.settlement?` | Settlement: ${item.settlement}`:''}${item.notes?` | Notes: ${item.notes}`:''}`).join('\n'); const streets=[...new Set(items.map(x=>x.location).filter(Boolean))].join('; '); const intersections=[...new Set(items.map(x=>x.nearestIntersection).filter(Boolean))].join('; ')||'Review and enter nearest cross street/intersection before submitting.'; return `TEXAS811 LOCATE PACKET DRAFT\n\nPROJECT / TICKET BASICS\nProject: ${projectName}\nTicket Type: ${ticketType}\nCity: ${city}\nCounty: ${county}\nReference / PO: ${poNumber}\nWork Done For: ${workDoneFor}\nLocate Zone: ${zone}\n${startDate?`Planned Start Date: ${startDate}\n`:''}Duration: ${duration}\n\nTEXAS811 SELECTIONS\nNature of Work: ${natureOfWork}\nExplosives: ${getSelectValue('explosives')}\nWhite Lined: ${getSelectValue('whiteLined')}\nDirectional Drilling: ${getSelectValue('directionalDrilling')}\nDeeper Than 16 Inches: ${getSelectValue('deeperThan16')}\n\nWORK SITE ADDRESS / STREET\n${streets}\n\nNEAREST INTERSECTION(S)\n${intersections}\n\nDRIVING DIRECTIONS\n${globalDirections}\n\nWORK SITE LOCATION INSTRUCTIONS\nNeed all utilities located within the ${defaultLane}. Work limits are defined by the clear BEGIN LOCATE and END LOCATE points below. Locate the full route between the start and stop points, including roadway panels, curb line, sidewalk, and adjacent right-of-way within the listed locate width.\n\nCLEAR START / STOP LIMITS\n${limits}\n\nADDITIONAL INFORMATION\nKKE Concrete Lifting will be performing polyurethane concrete lifting, leveling, and stabilization. Work includes drilling 5/8-inch holes through existing concrete roadway and/or sidewalk panels and injecting high-density polyurethane foam beneath the slab. Deep injection areas may include tubing to approximately 4 feet below the concrete to stabilize weak subgrade soils. This is spot repair / slab stabilization, not open trench excavation.\n\nWORK LOCATIONS INCLUDED\n${workLocations}\n\nLOCATOR NOTES\n- Please mark all public and private utilities within and immediately adjacent to the work limits.\n- Include roadway panels, curb line, sidewalk areas, parkway/right-of-way areas, and any area that may be affected by drilling or polyurethane injection.\n- Include both sides of the roadway where the work notes say across street or across roadway.\n- If limits are unclear, contact KKE before marking incomplete areas.\n- Do not mark only the intersection if the work area extends along the street or across the roadway.
-- Include an additional ${locateBuffer} ft buffer before and after the described work area to allow safe equipment positioning and unforeseen adjacent repairs.`}
+function buildLocateText(zone,items){
+  const city=getSelectValue('city')||'';
+  const county=getSelectValue('county')||'';
+  const workDoneFor=getSelectValue('workDoneFor')||'';
+  const defaultLane=getSelectValue('defaultLane')||'roadway panels, curb line, sidewalk, and adjacent right-of-way';
+  const locateBuffer=parseInt(getSelectValue('locateBuffer')||'20',10)||0;
+
+  const workAreas=[...new Set(items.map(item=>{
+    const start=item.startPoint||item.location||'';
+    const end=item.endPoint||item.location||'';
+    return start===end ? start : `${start} to ${end}`;
+  }).filter(Boolean))].join('; ');
+
+  const intersections=[...new Set(items.map(x=>x.nearestIntersection).filter(Boolean))].join('; ')||'Nearest intersection needs review.';
+
+  const directions=items.map((item,index)=>{
+    const buffered=getBufferedGps(item.gpsStart,item.gpsEnd,locateBuffer);
+    const startGps=item.gpsStart?buffered.start:'';
+    const endGps=item.gpsEnd?buffered.end:'';
+    const startText=startGps?`GPS ${startGps}`:`${item.startPoint||item.location} [GPS NEEDS REVIEW]`;
+    const endText=endGps?`GPS ${endGps}`:`${item.endPoint||item.location} [GPS NEEDS REVIEW]`;
+    const routeDistance=(startGps&&endGps)?estimateDistanceFeet(startGps,endGps):'';
+    const lf=routeDistance||item.linearFeet||estimateLfFromDimensions(item.dimensions)||'field-measured distance';
+    const direction=(startGps&&endGps)?cardinalFromBearing(bearingDegrees(parseLatLng(startGps),parseLatLng(endGps))):'along roadway';
+    const intersection=item.nearestIntersection||'nearest intersection';
+    const side=item.sideOfRoad||'Both Sides';
+    const width=item.locateWidth||'15 ft each side of work area';
+
+    return `${index+1}. From ${intersection}, proceed to BEGIN LOCATE at ${startText}. Continue approximately ${lf} LF ${direction} to END LOCATE at ${endText}. Locate width: ${width}. Side of roadway: ${side}.`;
+  }).join('
+');
+
+  return `TEXAS811 LOCATE REQUEST
+
+CITY: ${city}
+COUNTY: ${county}
+WORK FOR: ${workDoneFor}
+ZONE: ${zone}
+
+WORK AREA
+${workAreas}
+
+NEAREST INTERSECTION(S)
+${intersections}
+
+WORK DESCRIPTION
+Concrete lifting and stabilization. Request utility markings within ${defaultLane}.
+
+LOCATE LIMITS / DIRECTIONS
+${directions}
+
+LOCATOR NOTES
+- Mark all utilities within the described start/stop limits.
+- Include both sides of the roadway where applicable.
+- GPS start/end points include a ${locateBuffer} ft buffer before and after the work area.`;
+}
+
 function copyLocateText(){const text=window.generatedLocateText||''; if(!text){alert('Generate locate wording first.'); return} navigator.clipboard.writeText(text).then(()=>{setCopyStatus('Locate packet copied to clipboard.'); alert('Locate packet copied.')}).catch(()=>alert('Copy failed. Generate the text again, then try copying.'))}
 function getProjectState(){return{savedAt:new Date().toISOString(),projectName:getSelectValue('projectName'),city:getSelectValue('city'),county:getSelectValue('county'),poNumber:getSelectValue('poNumber'),ticketType:getSelectValue('ticketType'),natureOfWork:getSelectValue('natureOfWork'),workDoneFor:getSelectValue('workDoneFor'),duration:getSelectValue('duration'),explosives:getSelectValue('explosives'),whiteLined:getSelectValue('whiteLined'),directionalDrilling:getSelectValue('directionalDrilling'),deeperThan16:getSelectValue('deeperThan16'),defaultLane:getSelectValue('defaultLane'),locateBuffer:getSelectValue('locateBuffer'),startDate:getSelectValue('startDate'),nearestMajorRoad:getSelectValue('nearestMajorRoad'),estimateText:getSelectValue('estimateText'),globalDirections:getSelectValue('globalDirections'),locations}}
 function applyProjectState(s){if(!s)return; ['projectName','city','county','poNumber','ticketType','natureOfWork','workDoneFor','duration','explosives','whiteLined','directionalDrilling','deeperThan16','defaultLane','locateBuffer','startDate','nearestMajorRoad','estimateText','globalDirections'].forEach(id=>{if($(id)) $(id).value=s[id]||''}); locations=Array.isArray(s.locations)?s.locations:[]; window.generatedLocateText=''; renderLocations(); renderSummary(); updateZoneSelect(); setCopyStatus('Project loaded. Generate locate text when ready.')}
