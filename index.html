@@ -246,10 +246,7 @@ td input{min-width:150px}
 <div class="card"><h2>3. Quick Summary</h2><div id="summary" class="empty">No locations extracted yet.</div><label for="globalDirections">Default Driving Directions Starter</label><textarea id="globalDirections" class="small-textarea">From the nearest major roadway, travel to the listed work street/intersection. Locate limits are defined by the BEGIN LOCATE and END LOCATE GPS coordinates below.</textarea><label>GPS Diagnostic Log</label><div id="gpsDebug" class="locate-output">No GPS attempt yet.</div></div>
 </section>
 <section class="card"><h2>4. Review Extracted Locations</h2><p class="subtext">Generate GPS after extraction. Review rows before submitting.</p><div id="locationsTable" class="empty">No locations extracted yet.</div><div class="btn-row"><button onclick="addManualRow()">Add Manual Location</button><button onclick="autoAssignZones()">Auto-Assign Zones</button><button onclick="generateCoordinatesForAll()">Generate GPS Coordinates</button><button class="btn-secondary" onclick="downloadCsv()">Download CSV</button></div></section>
-<section class="card"><h2>5. Generate Texas811 Locate Packet</h2><p class="subtext">Generates short locator-facing text only. No pricing or internal estimate details.</p><label for="zoneSelect">Zone</label><select id="zoneSelect"></select><div class="btn-row"><button onclick="generateLocateForSelectedZone()">Generate Selected Zone</button><button class="btn-secondary" onclick="generateAllZones()">Generate All Zones</button><button class="btn-secondary" onclick="copyLocateText()">Copy Locate Text</button></div><p id="copyStatus" class="footer-note">No locate text generated yet.</p>
-<label for="locatePreview">Generated Locate Text</label>
-<div id="locatePreview" class="locate-output">Generated locate text will appear here.</div>
-</section>
+<section class="card"><h2>5. Generate Texas811 Locate Packet</h2><p class="subtext">Generates short locator-facing text only. No pricing or internal estimate details.</p><label for="zoneSelect">Zone</label><select id="zoneSelect"></select><div class="btn-row"><button onclick="generateLocateForSelectedZone()">Generate Selected Zone</button><button class="btn-secondary" onclick="generateAllZones()">Generate All Zones</button><button class="btn-secondary" onclick="copyLocateText()">Copy Locate Text</button></div><p id="copyStatus" class="footer-note">No locate text generated yet.</p></section>
 </main>
 <script>
 let locations=[];window.generatedLocateText='';let googleMapsLoadPromise=null;
@@ -271,19 +268,15 @@ function $(id){return document.getElementById(id)}
 if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'}
 function getVal(id){return $(id)?$(id).value:''}
 function setCopyStatus(msg){const el=$('copyStatus');if(el)el.textContent=msg}
-function updateLocatePreview(){
-  const box=$('locatePreview');
-  if(box){
-    box.textContent=window.generatedLocateText||'Generated locate text will appear here.';
-  }
-}
 function gpsLog(msg){const box=$('gpsDebug');if(!box)return;const ts=new Date().toLocaleTimeString();if(box.textContent==='No GPS attempt yet.')box.textContent='';box.textContent+=`[${ts}] ${msg}\n`}
 function clearGpsLog(){const box=$('gpsDebug');if(box)box.textContent=''}
 async function handlePdfUpload(e){const file=e.target.files&&e.target.files[0];if(!file)return;if(!window.pdfjsLib){alert('PDF parser failed to load.');return}try{setCopyStatus('Reading PDF...');const buffer=await file.arrayBuffer();const pdf=await pdfjsLib.getDocument({data:buffer}).promise;let text='';for(let i=1;i<=pdf.numPages;i++){const page=await pdf.getPage(i);const content=await page.getTextContent();text+=`\n\n--- PAGE ${i} ---\n`+content.items.map(item=>item.str).join(' ')}$('estimateText').value=text.trim();parseEstimate();alert(`PDF extracted. Found ${locations.length} work location(s).`)}catch(err){console.error(err);alert('PDF extraction failed. Try paste text instead.')}}
 function loadTributeExample(){$('estimateText').value=sampleText.trim();parseEstimate()}
-function clearAll(){locations=[];window.generatedLocateText='';$('estimateText').value='';renderLocations();renderSummary();updateZoneSelect();updateLocatePreview();setCopyStatus('No locate text generated yet.');clearGpsLog()}
+function clearAll(){locations=[];window.generatedLocateText='';$('estimateText').value='';renderLocations();renderSummary();updateZoneSelect();setCopyStatus('No locate text generated yet.');clearGpsLog()}
 function extractProjectSetupFromEstimate(text){
-  const source=String(text||'').replace(/\s+/g,' ').trim();
+  const source=String(text||'').replaceAll('
+',' ').replaceAll('
+',' ').trim();
   if(!source)return;
 
   const poIndex=source.toLowerCase().indexOf('po#');
@@ -332,14 +325,72 @@ function guessCountyFromCity(city){
   return counties[key]||'';
 }
 
-function cleanLocationName(raw){return String(raw||'').replace(/\(METHOD INJECTION ONLY\)/gi,'').replace(/\(DI INJECTION ONLY\)/gi,'').replace(/Deep Injection/gi,'').replace(/Lifting & Leveling/gi,'').replace(/acroos/gi,'across').replace(/\s+/g,' ').replace(/^[-\s]+/,'').trim()}
+function cleanLocationName(raw){
+  let text=String(raw||'');
+  text=text.replaceAll('(METHOD INJECTION ONLY)','');
+  text=text.replaceAll('(DI INJECTION ONLY)','');
+  text=text.replaceAll('METHOD INJECTION ONLY','');
+  text=text.replaceAll('DI INJECTION ONLY','');
+  text=text.replaceAll('Deep Injection','');
+  text=text.replaceAll('Lifting & Leveling','');
+  text=text.replaceAll('acroos','across');
+  text=text.replaceAll('Acroos','Across');
+  text=stripAfterBadPhrase(text);
+  text=text.replaceAll(' and across the Street Holding water','');
+  text=text.replaceAll(' and across the street holding water','');
+  text=text.replaceAll(' Holding water','');
+  text=text.replaceAll(' holding water','');
+  text=text.replaceAll('  ',' ');
+  return text.trim().replace(/^[- ]+/,'');
+}
+
+function stripAfterBadPhrase(value){
+  let text=String(value||'');
+  const badPhrases=[' This location',' There are',' KKE will',' Once the concrete',' with a settlement',' and there is water',' There is a dip',' needs to be lifted',' need to be lifted'];
+  let cut=-1;
+  const lower=text.toLowerCase();
+  badPhrases.forEach(function(phrase){
+    const idx=lower.indexOf(phrase.toLowerCase());
+    if(idx>-1&&(cut===-1||idx<cut))cut=idx;
+  });
+  if(cut>-1)text=text.slice(0,cut);
+  return text.trim();
+}
+
+function formatWorkAreaName(item){
+  const start=stripCityState(String(item.startPoint||''));
+  const end=stripCityState(String(item.endPoint||''));
+  const location=stripCityState(cleanLocationName(item.location||''));
+  if(start&&end&&start!==end)return start+' to '+end;
+  return start||location;
+}
+
+function stripCityState(value){
+  let text=String(value||'').trim();
+  text=text.replaceAll(', The Colony, TX','');
+  text=text.replaceAll(', TX','');
+  text=text.replaceAll('  ',' ');
+  return text.trim();
+}
 function normalize(v){return String(v||'').toLowerCase().replace(/[^a-z0-9]/g,'')}
 function extractDimensions(text){const m=String(text||'').match(/\b\d+\s*x\s*\d+'?/gi)||[];return[...new Set(m.map(x=>x.replace(/\s+/g,'').replace(/x/i,'x')))].join(', ')}
 function extractCoordinates(text){const m=String(text||'').match(/-?\d{1,3}\.\d{4,}\s*,\s*-?\d{1,3}\.\d{4,}/g)||[];return[...new Set(m.map(x=>x.replace(/\s+/g,'')))]}
 function extractNotes(text){const notes=[];if(/holding water|ponding/i.test(text))notes.push('ponding');if(/ADA/i.test(text))notes.push('ADA');if(/across street|across the street/i.test(text))notes.push('across street');if(/mismatched joint/i.test(text))notes.push('mismatched joint');if(/entire road|dip across/i.test(text))notes.push('roadway dip');return notes.join(', ')}
 function parseEstimate(){const text=$('estimateText').value||'';extractProjectSetupFromEstimate(text);const rawLines=text.split(/\n+/).map(l=>l.trim()).filter(Boolean);const found=[];rawLines.forEach((line,i)=>{if(!/Job Location/i.test(line))return;const method=/DI INJECTION ONLY|Deep Injection/i.test(line)?'DI':'Method';const after=line.split(/Job Location[-\s]*/i)[1]||line;const name=cleanLocationName(after);const context=[line,rawLines[i+1]||'',rawLines[i+2]||'',rawLines[i+3]||''].join(' ');const coords=extractCoordinates(context);const existing=found.find(x=>normalize(x.location)===normalize(name));if(existing){if(!existing.methodTypes.includes(method))existing.methodTypes.push(method);existing.dimensions=uniqueText(existing.dimensions,extractDimensions(context));existing.notes=uniqueText(existing.notes,extractNotes(context));if(!existing.gpsStart&&coords[0])existing.gpsStart=coords[0];if(!existing.gpsEnd&&coords[1])existing.gpsEnd=coords[1];return}const parsed=deriveStartEndFromLocation(name);found.push({id:Date.now()+''+i,zone:'',location:name,county:getVal('county'),methodTypes:[method],dimensions:extractDimensions(context),notes:extractNotes(context),nearestIntersection:guessIntersection(name),startPoint:parsed.start,endPoint:parsed.end,direction:inferDirectionFromText(name),linearFeet:estimateLfFromDimensions(extractDimensions(context)),locateWidth:'15 ft each side of work area',sideOfRoad:/across/i.test(context)?'Across Street':'Both Sides',gpsStart:coords[0]||'',gpsEnd:coords[1]||'',status:'Draft'})});locations=found;autoAssignZones(false);renderLocations();renderSummary();updateZoneSelect();setCopyStatus(`Extracted ${locations.length} work location(s). Generate GPS next.`)}
 function uniqueText(a,b){return[...(a||'').split(', '),...(b||'').split(', ')].map(x=>x.trim()).filter(Boolean).filter((v,i,arr)=>arr.indexOf(v)===i).join(', ')}
-function guessIntersection(loc){const l=String(loc||'').toLowerCase();if(l.includes(' at '))return loc.replace(/.*?([A-Za-z0-9 ]+ at [A-Za-z0-9 ]+).*/i,'$1').replace(/ at /i,' & ');if(l.includes('burnley')&&l.includes('prescott'))return'Burnley & Prescott';if(l.includes('prescott')&&l.includes('wembley'))return'Prescott & Wembley';if(l.includes('bonny bank')&&l.includes('lindsay'))return'Bonny Bank & Lindsay Gardens';if(l.includes('broughton')&&l.includes('telford'))return'Broughton & Telford';return''}
+function guessIntersection(loc){
+  const clean=cleanLocationName(loc);
+  const l=String(clean||'').toLowerCase();
+  if(l.includes('burnley')&&l.includes('prescott'))return'Burnley & Prescott';
+  if(l.includes('prescott')&&l.includes('wembley'))return'Prescott & Wembley';
+  if(l.includes('bonny bank')&&l.includes('lindsay'))return'Bonny Bank & Lindsay Gardens';
+  if(l.includes('broughton')&&l.includes('telford'))return'Broughton & Telford';
+  if(l.includes(' at ')){
+    const parts=clean.split(' at ');
+    if(parts.length>=2)return parts[0].trim()+' & '+parts[1].trim();
+  }
+  return'';
+}
 function deriveStartEndFromLocation(loc){const city=getVal('city')||'';const state='TX';const text=String(loc||'');let m=text.match(/(\d{3,6})\s*[-–]\s*(\d{3,6})\s+([A-Za-z ]+)/i);if(m)return{start:`${m[1]} ${m[3].trim()}, ${city}, ${state}`,end:`${m[2]} ${m[3].trim()}, ${city}, ${state}`};m=text.match(/(\d{3,6})\s+([A-Za-z ]+)\s+through\s+(\d{3,6})\s+([A-Za-z ]+)/i);if(m)return{start:`${m[1]} ${m[2].trim()}, ${city}, ${state}`,end:`${m[3]} ${m[4].trim()}, ${city}, ${state}`};m=text.match(/(\d{3,6})\s+([A-Za-z ]+).*?(\d{3,6})\s+([A-Za-z ]+)/i);if(m)return{start:`${m[1]} ${m[2].trim()}, ${city}, ${state}`,end:`${m[3]} ${m[4].trim()}, ${city}, ${state}`};m=text.match(/(\d{3,6})\s+([A-Za-z ]+)/);if(m){const addr=`${m[1]} ${m[2].trim()}, ${city}, ${state}`;return{start:addr,end:addr}}const inter=guessIntersection(text);if(inter)return{start:`${inter}, ${city}, ${state}`,end:`${inter}, ${city}, ${state}`};return{start:text?`${text}, ${city}, ${state}`:'',end:text?`${text}, ${city}, ${state}`:''}}
 function inferDirectionFromText(t){const l=String(t||'').toLowerCase();if(l.includes('east'))return'east';if(l.includes('west'))return'west';if(l.includes('north'))return'north';if(l.includes('south'))return'south';return''}
 function estimateLfFromDimensions(dim){if(!dim)return'';const matches=[...String(dim).matchAll(/(\d+)\s*x\s*(\d+)/gi)];if(!matches.length)return'';return String(matches.reduce((s,m)=>s+Math.max(parseInt(m[1],10),parseInt(m[2],10)),0))}
@@ -361,18 +412,8 @@ function renderLocations(){const c=$('locationsTable');if(!locations.length){c.c
 function esc(v){return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
 function updateField(i,f,v){locations[i][f]=v;renderSummary();updateZoneSelect()}function deleteRow(i){locations.splice(i,1);renderLocations();renderSummary();updateZoneSelect()}function addManualRow(){locations.push({id:Date.now(),zone:'Unassigned',location:'',county:getVal('county'),methodTypes:['Method'],dimensions:'',notes:'',nearestIntersection:'',startPoint:'',endPoint:'',direction:'',linearFeet:'',locateWidth:'15 ft each side of work area',sideOfRoad:'Both Sides',gpsStart:'',gpsEnd:'',status:'Draft'});renderLocations();renderSummary();updateZoneSelect()}
 function updateZoneSelect(){const z=[...new Set(locations.map(x=>x.zone||'Unassigned'))];$('zoneSelect').innerHTML=z.map(x=>`<option>${esc(x)}</option>`).join('')}
-function generateLocateForSelectedZone(){
-  const z=getVal('zoneSelect');
-  window.generatedLocateText=buildLocateText(z,locations.filter(x=>(x.zone||'Unassigned')===z));
-  updateLocatePreview();
-  setCopyStatus('Generated locate text. Review below, then click Copy Locate Text.');
-}function generateAllZones(){
-  const z=[...new Set(locations.map(x=>x.zone||'Unassigned'))];
-  window.generatedLocateText=z.map(zone=>buildLocateText(zone,locations.filter(x=>(x.zone||'Unassigned')===zone))).join('\n\n------------------------------\n\n');
-  updateLocatePreview();
-  setCopyStatus(`Generated ${z.length} zone(s). Review below, then click Copy Locate Text.`);
-}
-function buildLocateText(zone,items){const city=getVal('city'),county=getVal('county'),workFor=getVal('workDoneFor'),defaultLane=getVal('defaultLane'),buf=parseInt(getVal('locateBuffer')||'20',10)||0;const workAreas=[...new Set(items.map(it=>it.startPoint&&it.endPoint&&it.startPoint!==it.endPoint?`${it.startPoint} to ${it.endPoint}`:(it.startPoint||it.location)).filter(Boolean))].join('; ');const intersections=[...new Set(items.map(it=>it.nearestIntersection).filter(Boolean))].join('; ')||'Nearest intersection needs review.';const lines=items.map((it,i)=>{const bg=bufferedGps(it.gpsStart,it.gpsEnd,buf);const start=it.gpsStart?`GPS ${bg.start}`:`${it.startPoint||it.location} [GPS NEEDS REVIEW]`;const end=it.gpsEnd?`GPS ${bg.end}`:`${it.endPoint||it.location} [GPS NEEDS REVIEW]`;const dist=(bg.start&&bg.end)?distanceFeet(bg.start,bg.end):'';let dir=it.direction||'along roadway';const ps=parseLatLng(bg.start),pe=parseLatLng(bg.end);if(ps&&pe)dir=cardinalFromBearing(bearingDegrees(ps,pe));return `${i+1}. From ${it.nearestIntersection||'nearest intersection'}, proceed to BEGIN LOCATE at ${start}. Continue approximately ${dist||it.linearFeet||'field-measured'} LF ${dir} to END LOCATE at ${end}. Locate width: ${it.locateWidth||'15 ft each side of work area'}. Side of roadway: ${it.sideOfRoad||'Both Sides'}.`}).join('\n');return `TEXAS811 LOCATE REQUEST\n\nCITY: ${city}\nCOUNTY: ${county}\nWORK FOR: ${workFor}\nZONE: ${zone}\n\nWORK AREA\n${workAreas}\n\nNEAREST INTERSECTION(S)\n${intersections}\n\nWORK DESCRIPTION\nConcrete lifting and stabilization. Request utility markings within ${defaultLane}.\n\nLOCATE LIMITS / DIRECTIONS\n${lines}\n\nLOCATOR NOTES\n- Mark all utilities within the described start/stop limits.\n- Include both sides of the roadway where applicable.\n- GPS start/end points include a ${buf} ft buffer before and after the work area.`}
+function generateLocateForSelectedZone(){const z=getVal('zoneSelect');window.generatedLocateText=buildLocateText(z,locations.filter(x=>(x.zone||'Unassigned')===z));setCopyStatus('Generated locate text. Click Copy Locate Text.')}function generateAllZones(){const z=[...new Set(locations.map(x=>x.zone||'Unassigned'))];window.generatedLocateText=z.map(zone=>buildLocateText(zone,locations.filter(x=>(x.zone||'Unassigned')===zone))).join('\n\n------------------------------\n\n');setCopyStatus(`Generated ${z.length} zone(s). Click Copy Locate Text.`)}
+function buildLocateText(zone,items){const city=getVal('city'),county=getVal('county'),workFor=getVal('workDoneFor'),defaultLane=getVal('defaultLane'),buf=parseInt(getVal('locateBuffer')||'20',10)||0;const workAreas=[...new Set(items.map(it=>formatWorkAreaName(it)).filter(Boolean))].join('; ');const intersections=[...new Set(items.map(it=>it.nearestIntersection).filter(Boolean))].join('; ')||'Nearest intersection needs review.';const lines=items.map((it,i)=>{const bg=bufferedGps(it.gpsStart,it.gpsEnd,buf);const start=it.gpsStart?`GPS ${bg.start}`:`${it.startPoint||it.location} [GPS NEEDS REVIEW]`;const end=it.gpsEnd?`GPS ${bg.end}`:`${it.endPoint||it.location} [GPS NEEDS REVIEW]`;const dist=(bg.start&&bg.end)?distanceFeet(bg.start,bg.end):'';let dir=it.direction||'along roadway';const ps=parseLatLng(bg.start),pe=parseLatLng(bg.end);if(ps&&pe)dir=cardinalFromBearing(bearingDegrees(ps,pe));return `${i+1}. From ${it.nearestIntersection||'nearest intersection'}, proceed to BEGIN LOCATE at ${start}. Continue approximately ${dist||it.linearFeet||'field-measured'} LF ${dir} to END LOCATE at ${end}. Locate width: ${it.locateWidth||'15 ft each side of work area'}. Side of roadway: ${it.sideOfRoad||'Both Sides'}.`}).join('\n');return `TEXAS811 LOCATE REQUEST\n\nCITY: ${city}\nCOUNTY: ${county}\nWORK FOR: ${workFor}\nZONE: ${zone}\n\nWORK AREA\n${workAreas}\n\nNEAREST INTERSECTION(S)\n${intersections}\n\nWORK DESCRIPTION\nConcrete lifting and stabilization. Request utility markings within ${defaultLane}.\n\nLOCATE LIMITS / DIRECTIONS\n${lines}\n\nLOCATOR NOTES\n- Mark all utilities within the described start/stop limits.\n- Include both sides of the roadway where applicable.\n- GPS start/end points include a ${buf} ft buffer before and after the work area.`}
 function copyLocateText(){if(!window.generatedLocateText)return alert('Generate locate wording first.');navigator.clipboard.writeText(window.generatedLocateText).then(()=>alert('Locate text copied.'))}
 function getProjectState(){return{projectName:getVal('projectName'),city:getVal('city'),county:getVal('county'),poNumber:getVal('poNumber'),workDoneFor:getVal('workDoneFor'),duration:getVal('duration'),defaultLane:getVal('defaultLane'),locateBuffer:getVal('locateBuffer'),estimateText:getVal('estimateText'),globalDirections:getVal('globalDirections'),locations}}function applyProjectState(s){if(!s)return;['projectName','city','county','poNumber','workDoneFor','duration','defaultLane','locateBuffer','estimateText','globalDirections'].forEach(id=>{if($(id))$(id).value=s[id]||''});locations=Array.isArray(s.locations)?s.locations:[];renderLocations();renderSummary();updateZoneSelect()}function saveProject(){localStorage.setItem('kkeLocateBuilder:lastProject',JSON.stringify(getProjectState()));alert('Project saved.')}function loadProject(){const raw=localStorage.getItem('kkeLocateBuilder:lastProject');if(!raw)return alert('No saved project found.');applyProjectState(JSON.parse(raw))}
 function downloadCsv(){if(!locations.length)return alert('No locations to download.');const headers=['Zone','Location','Intersection','Start','End','Direction','LF','Side','GPS Start','GPS End'];const rows=locations.map(i=>[i.zone,i.location,i.nearestIntersection,i.startPoint,i.endPoint,i.direction,i.linearFeet,i.sideOfRoad,i.gpsStart,i.gpsEnd]);const csv=[headers,...rows].map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='kke-texas811-locates.csv';a.click();URL.revokeObjectURL(url)}
