@@ -269,6 +269,8 @@
         <div class="btn-row">
           <button onclick="parseEstimate()">Extract Work Locations</button>
           <button class="btn-secondary" onclick="loadTributeExample()">Load Tribute Example</button>
+          <button class="btn-secondary" onclick="saveProject()">Save Project</button>
+          <button class="btn-secondary" onclick="loadProject()">Load Project</button>
           <button class="btn-secondary" onclick="clearAll()">Clear</button>
         </div>
       </div>
@@ -361,13 +363,87 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
 
     function clearAll() {
       locations = [];
+      window.generatedLocateText = '';
       document.getElementById('estimateText').value = '';
       renderLocations();
       renderSummary();
       updateZoneSelect();
-      window.generatedLocateText = '';
       const copyStatus = document.getElementById('copyStatus');
       if (copyStatus) copyStatus.textContent = 'No locate text generated yet.';
+    }
+
+    function getProjectState() {
+      return {
+        savedAt: new Date().toISOString(),
+        projectName: document.getElementById('projectName').value,
+        city: document.getElementById('city').value,
+        county: document.getElementById('county').value,
+        poNumber: document.getElementById('poNumber').value,
+        ticketType: document.getElementById('ticketType').value,
+        natureOfWork: document.getElementById('natureOfWork').value,
+        workDoneFor: document.getElementById('workDoneFor').value,
+        duration: document.getElementById('duration').value,
+        explosives: document.getElementById('explosives').value,
+        whiteLined: document.getElementById('whiteLined').value,
+        directionalDrilling: document.getElementById('directionalDrilling').value,
+        deeperThan16: document.getElementById('deeperThan16').value,
+        defaultLane: document.getElementById('defaultLane').value,
+        startDate: document.getElementById('startDate').value,
+        nearestMajorRoad: document.getElementById('nearestMajorRoad').value,
+        estimateText: document.getElementById('estimateText').value,
+        globalDirections: document.getElementById('globalDirections').value,
+        locations
+      };
+    }
+
+    function applyProjectState(state) {
+      if (!state) return;
+      document.getElementById('projectName').value = state.projectName || '';
+      document.getElementById('city').value = state.city || '';
+      document.getElementById('county').value = state.county || '';
+      document.getElementById('poNumber').value = state.poNumber || '';
+      document.getElementById('ticketType').value = state.ticketType || 'Normal';
+      document.getElementById('natureOfWork').value = state.natureOfWork || 'Polyurethane concrete stabilization';
+      document.getElementById('workDoneFor').value = state.workDoneFor || '';
+      document.getElementById('duration').value = state.duration || '';
+      document.getElementById('explosives').value = state.explosives || 'No';
+      document.getElementById('whiteLined').value = state.whiteLined || 'No';
+      document.getElementById('directionalDrilling').value = state.directionalDrilling || 'No';
+      document.getElementById('deeperThan16').value = state.deeperThan16 || 'Yes - DI may reach approx. 4 ft';
+      document.getElementById('defaultLane').value = state.defaultLane || '';
+      document.getElementById('startDate').value = state.startDate || '';
+      document.getElementById('nearestMajorRoad').value = state.nearestMajorRoad || '';
+      document.getElementById('estimateText').value = state.estimateText || '';
+      document.getElementById('globalDirections').value = state.globalDirections || '';
+      locations = Array.isArray(state.locations) ? state.locations : [];
+      window.generatedLocateText = '';
+      renderLocations();
+      renderSummary();
+      updateZoneSelect();
+      const copyStatus = document.getElementById('copyStatus');
+      if (copyStatus) copyStatus.textContent = 'Project loaded. Generate locate text when ready.';
+    }
+
+    function saveProject() {
+      const state = getProjectState();
+      const name = (state.projectName || 'KKE Locate Project').trim();
+      localStorage.setItem('kkeLocateBuilder:lastProject', JSON.stringify(state));
+      localStorage.setItem(`kkeLocateBuilder:project:${name}`, JSON.stringify(state));
+      alert(`Project saved: ${name}`);
+    }
+
+    function loadProject() {
+      const raw = localStorage.getItem('kkeLocateBuilder:lastProject');
+      if (!raw) {
+        alert('No saved project found on this browser.');
+        return;
+      }
+      try {
+        applyProjectState(JSON.parse(raw));
+      } catch (error) {
+        console.error(error);
+        alert('Saved project could not be loaded.');
+      }
     }
 
     function parseEstimate() {
@@ -843,7 +919,11 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
 
     function generateAllZones() {
       const zones = [...new Set(locations.map(x => x.zone || 'Unassigned'))];
-      window.generatedLocateText = zones.map(zone => buildLocateText(zone, locations.filter(x => (x.zone || 'Unassigned') === zone))).join('\n\n------------------------------------------------------------\n\n') || '';
+      window.generatedLocateText = zones.map(zone => buildLocateText(zone, locations.filter(x => (x.zone || 'Unassigned') === zone))).join('
+
+------------------------------------------------------------
+
+') || '';
       const copyStatus = document.getElementById('copyStatus');
       if (copyStatus) copyStatus.textContent = `Generated locate text for ${zones.length} zone(s). Click Copy Locate Text.`;
     }
