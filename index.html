@@ -329,3 +329,456 @@
         <p class="subtext">Paste the extracted estimate text here. This version also looks for GPS coordinates when they are included in quotes or notes.</p>
         <textarea id="estimateText" placeholder="Paste estimate text here..."></textarea>
         <div class="btn-row">
+          <button onclick="parseEstimate()">Extract Work Locations</button>
+          <button class="btn-secondary" onclick="loadTributeExample()">Load Tribute Example</button>
+          <button class="btn-secondary" onclick="clearAll()">Clear</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>3. Quick Summary</h2>
+        <div id="summary" class="empty">No locations extracted yet.</div>
+        <label for="globalDirections">Default Driving Directions Starter</label>
+        <textarea id="globalDirections" class="small-textarea">From the nearest major roadway, travel to the listed work street/intersection. Locate limits are defined by the work locations, roadway panels, curb line, adjacent sidewalk, and any GPS coordinates provided below.</textarea>
+        <p class="footer-note">Tip: Texas811 directions should be traceable: start point, travel direction, cross street/intersection, exact limits, side/lane, and GPS when available.</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>4. Review Extracted Locations</h2>
+      <p class="subtext">Edit rows before generating Texas811 wording. Add GPS start/end when known. Coordinates should be decimal degrees, for example: 33.086712, -96.918221.</p>
+      <div id="locationsTable" class="empty">No locations extracted yet.</div>
+      <div class="btn-row">
+        <button onclick="addManualRow()">Add Manual Location</button>
+        <button onclick="autoAssignZones()">Auto-Assign Zones</button>
+        <button class="btn-secondary" onclick="downloadCsv()">Download CSV</button>
+      </div>
+    </section>
+
+    <section class="grid grid-2">
+      <div class="card">
+        <h2>5. Generate Texas811 Locate Packet</h2>
+        <p class="subtext">Generate one zone at a time. This gives you the text to paste into Texas811 fields.</p>
+        <label for="zoneSelect">Zone</label>
+        <select id="zoneSelect"></select>
+        <div class="btn-row">
+          <button onclick="generateLocateForSelectedZone()">Generate Selected Zone</button>
+          <button class="btn-secondary" onclick="generateAllZones()">Generate All Zones</button>
+          <button class="btn-secondary" onclick="copyLocateText()">Copy Text</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Locate Packet Output</h2>
+        <div id="locateOutput" class="locate-output">Locate wording will appear here.</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    let locations = [];
+
+    const sampleText = `
+Lifting & Leveling Job Location-8353-8337 Burnley and across the Street Holding water (METHOD INJECTION ONLY)
+There are 4 total areas that will be worked. The first is at 8349 Burnley. The second area is at 8341 Burnley. The third area is across the street from 8349 Burnley. The fourth location is a mismatched joint that runs across the road.
+60x8' 2" 40'x8' 1 1/2" 60'x8' 2" 24'x6' 2"
+Deep Injection Job Location-8353-8337 Burnley and across the Street Holding water (DI INJECTION ONLY)
+80 TUBES FOR DI
+Lifting & Leveling Job Location-2920 Prescott (METHOD INJECTION ONLY)
+This location is 65'x8' with a settlement of 2 1/4" and there is water ponding at the curb line.
+Deep Injection Job Location-2920 Prescott (DI INJECTION ONLY)
+30 TUBES FOR DI
+Lifting & Leveling Job Location-8155 Wakefield through 8163 Wakefield (METHOD INJECTION ONLY)
+This location has two areas that need to be worked that are holding water. 30'x8' 1 1/4" 65'x8' 2 3/4"
+Deep Injection Job Location-8155 Wakefield through 8163 Wakefield (DI INJECTION ONLY)
+47 TUBES FOR DI
+Lifting & Leveling Job Location Broughton at Telford (METHOD INJECTION ONLY)
+This location is 45'x6' with a settlement of 1 1/2".
+Deep Injection Job Location- Broughton at Telford (DI INJECTION ONLY)
+Lifting & Leveling Job Location 3421 Kirkfield (METHOD INJECTION ONLY)
+This location is 40'x6'' with a settlement of 1".
+Deep Injection Job Location- 3421 Kirkfield (DI INJECTION ONLY)
+Lifting & Leveling Job Location 8237 Bonny Bank (METHOD INJECTION ONLY)
+This location is 75'x9' with a settlement of 2 1/2".
+Deep Injection Job Location- 8237 Bonny Bank (DI INJECTION ONLY)
+Lifting & Leveling Job Location- Bonny Bank at Lindsay Gardens (METHOD INJECTION ONLY)
+This location has 3 separate work areas. Bonny Bank at Lindsay Gardens-48'x25' 5" settlement ADA- with a settlement of 6" 80'x25' sidewalk 75'x15' with a settlement of 5"to 6"
+Deep Injection Job Location- Bonny Bank at Lindsay Gardens (DI INJECTION ONLY)
+Lifting & Leveling Job Location-Prescott at Burnley (METHOD INJECTION ONLY)
+This location has two areas that need to be lifted. The first location is 30'x15' with a settlement of 1 1/2". The second area is 50'x6' with a settlement of 1 3/4".
+Deep Injection Job Location-Prescott at Burnley (DI INJECTION ONLY)
+Lifting & Leveling Job Location-Prescott at Wembley (METHOD INJECTION ONLY)
+This location has three areas that need to be lifted. The first location is 114x8' with a settlement of 1 1/2". The second area is 50'x8' with a settlement of 3". The third location is 70'x8' with a settlement of 2 1/2" Between 3036 Prescott and 8361 Wembley and across street. There is a dip across the entire road that needs to be lifted.
+Deep Injection Job Location-Prescott at Wembley (DI INJECTION ONLY)
+Lifting & Leveling Job Location-3745 Birmington and acroos street at 3748 Birmington (METHOD INJECTION ONLY)
+This location has three areas that need to be lifted. The first location is 45x9' with a settlement of 1". The second area is 21'x12' with a settlement of 2" in the crown of road. The third location is 50'x9' with a settlement of 2".
+Deep Injection Job Location-3745 Birmington and acroos street at 3748 Birmington (DI INJECTION ONLY)
+Lifting & Leveling Job Location-2921 Darcy (METHOD INJECTION ONLY)
+This location has two areas that need to be worked. The first area is 20'x9' with a settlement of 1" and the second area is 100'x9' with a settlement of 2 1/2".
+Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
+`;
+
+    function loadTributeExample() {
+      document.getElementById('estimateText').value = sampleText.trim();
+      parseEstimate();
+    }
+
+    function clearAll() {
+      locations = [];
+      document.getElementById('estimateText').value = '';
+      renderLocations();
+      renderSummary();
+      updateZoneSelect();
+      document.getElementById('locateOutput').textContent = 'Locate wording will appear here.';
+    }
+
+    function cleanLocationName(raw) {
+      return raw
+        .replace(/\(METHOD INJECTION ONLY\)/gi, '')
+        .replace(/\(DI INJECTION ONLY\)/gi, '')
+        .replace(/\s+/g, ' ')
+        .replace(/^[-\s]+/, '')
+        .replace(/acroos/gi, 'across')
+        .trim();
+    }
+
+    function parseEstimate() {
+      const text = document.getElementById('estimateText').value || '';
+      const lines = text.split(/\n+/).map(line => line.trim()).filter(Boolean);
+      const found = [];
+
+      lines.forEach((line, index) => {
+        const isLocationLine = /Job Location/i.test(line);
+        if (!isLocationLine) return;
+
+        const methodType = /DI INJECTION ONLY|Deep Injection/i.test(line) ? 'DI' : 'Method';
+        const afterLocation = line.split(/Job Location[-\s]*/i)[1] || line;
+        const name = cleanLocationName(afterLocation);
+        const context = [line, lines[index + 1] || '', lines[index + 2] || '', lines[index + 3] || ''].join(' ');
+        const dimensions = extractDimensions(context);
+        const settlements = extractSettlements(context);
+        const notes = extractNotes(context);
+        const coords = extractCoordinates(context);
+
+        const existing = found.find(item => normalize(item.location) === normalize(name));
+        if (existing) {
+          if (!existing.methodTypes.includes(methodType)) existing.methodTypes.push(methodType);
+          existing.dimensions = uniqueText(existing.dimensions, dimensions);
+          existing.settlement = uniqueText(existing.settlement, settlements);
+          existing.notes = uniqueText(existing.notes, notes);
+          if (!existing.gpsStart && coords[0]) existing.gpsStart = coords[0];
+          if (!existing.gpsEnd && coords[1]) existing.gpsEnd = coords[1];
+        } else {
+          found.push({
+            id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + index),
+            zone: '',
+            location: name,
+            county: document.getElementById('county').value,
+            methodTypes: [methodType],
+            dimensions,
+            settlement: settlements,
+            notes,
+            nearestIntersection: guessIntersection(name),
+            laneArea: document.getElementById('defaultLane').value,
+            drivingDirections: '',
+            gpsStart: coords[0] || '',
+            gpsEnd: coords[1] || '',
+            ticketNumber: '',
+            status: 'Draft'
+          });
+        }
+      });
+
+      locations = found;
+      autoAssignZones(false);
+      renderLocations();
+      renderSummary();
+      updateZoneSelect();
+    }
+
+    function normalize(value) {
+      return (value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
+
+    function extractDimensions(text) {
+      const matches = text.match(/\b\d+\s*x\s*\d+'?|\b\d+'\s*x\s*\d+'?/gi) || [];
+      return [...new Set(matches.map(m => m.replace(/\s+/g, '').replace(/x/i, 'x')))].join(', ');
+    }
+
+    function extractSettlements(text) {
+      const matches = text.match(/(?:settlement of\s*)?\d+\s*(?:\d\/\d)?\s*"(?:\s*to\s*\d+\s*(?:\d\/\d)?\s*")?/gi) || [];
+      return [...new Set(matches.map(m => m.replace(/settlement of\s*/i, '').trim()))].join(', ');
+    }
+
+    function extractCoordinates(text) {
+      const matches = text.match(/-?\d{1,3}\.\d{4,}\s*,\s*-?\d{1,3}\.\d{4,}/g) || [];
+      return [...new Set(matches.map(m => m.replace(/\s+/g, '')))]
+    }
+
+    function extractNotes(text) {
+      const notes = [];
+      if (/holding water|ponding/i.test(text)) notes.push('holding water / ponding');
+      if (/ADA/i.test(text)) notes.push('ADA area');
+      if (/across street|across the street/i.test(text)) notes.push('includes area across street');
+      if (/mismatched joint/i.test(text)) notes.push('mismatched roadway joint');
+      if (/dip across the entire road|entire road/i.test(text)) notes.push('dip across roadway');
+      if (/crown of road/i.test(text)) notes.push('crown of road settlement');
+      return notes.join(', ');
+    }
+
+    function guessIntersection(location) {
+      const lower = location.toLowerCase();
+      if (lower.includes(' at ')) return location.replace(/.*?([A-Za-z0-9 ]+ at [A-Za-z0-9 ]+).*/i, '$1').replace(/ at /i, ' & ');
+      if (lower.includes('burnley') && lower.includes('prescott')) return 'Burnley & Prescott';
+      if (lower.includes('prescott') && lower.includes('wembley')) return 'Prescott & Wembley';
+      if (lower.includes('bonny bank') && lower.includes('lindsay')) return 'Bonny Bank & Lindsay Gardens';
+      if (lower.includes('broughton') && lower.includes('telford')) return 'Broughton & Telford';
+      return '';
+    }
+
+    function uniqueText(existing, added) {
+      const parts = [...(existing || '').split(', '), ...(added || '').split(', ')]
+        .map(x => x.trim())
+        .filter(Boolean);
+      return [...new Set(parts)].join(', ');
+    }
+
+    function autoAssignZones(shouldRender = true) {
+      locations = locations.map(item => {
+        const lower = item.location.toLowerCase();
+        let zone = 'Zone D - Other Work Areas';
+        if (lower.includes('burnley') || lower.includes('prescott') || lower.includes('wembley')) zone = 'Zone A - Burnley / Prescott / Wembley';
+        if (lower.includes('bonny bank') || lower.includes('lindsay')) zone = 'Zone B - Bonny Bank / Lindsay Gardens';
+        if (lower.includes('wakefield') || lower.includes('darcy')) zone = 'Zone C - Wakefield / Darcy';
+        if (lower.includes('broughton') || lower.includes('telford') || lower.includes('kirkfield') || lower.includes('birmington')) zone = 'Zone D - Broughton / Kirkfield / Birmington';
+        return { ...item, zone };
+      });
+      if (shouldRender) {
+        renderLocations();
+        renderSummary();
+        updateZoneSelect();
+      }
+    }
+
+    function renderSummary() {
+      const summary = document.getElementById('summary');
+      if (!locations.length) {
+        summary.className = 'empty';
+        summary.textContent = 'No locations extracted yet.';
+        return;
+      }
+
+      const zones = [...new Set(locations.map(x => x.zone || 'Unassigned'))];
+      const methodCount = locations.filter(x => x.methodTypes.includes('Method')).length;
+      const diCount = locations.filter(x => x.methodTypes.includes('DI')).length;
+      const gpsCount = locations.filter(x => x.gpsStart || x.gpsEnd).length;
+
+      summary.className = '';
+      summary.innerHTML = `
+        <span class="pill">${locations.length} work locations</span>
+        <span class="pill">${zones.length} locate zones</span>
+        <span class="pill">${methodCount} Method areas</span>
+        <span class="pill">${diCount} DI areas</span>
+        <span class="pill">${gpsCount} GPS-ready areas</span>
+        <div class="footer-note">Recommended next step: review county, intersection, driving directions, and GPS before copying into Texas811.</div>
+      `;
+    }
+
+    function renderLocations() {
+      const container = document.getElementById('locationsTable');
+      if (!locations.length) {
+        container.className = 'empty';
+        container.textContent = 'No locations extracted yet.';
+        return;
+      }
+      container.className = 'scroll-wrap';
+      container.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Zone</th>
+              <th>Location</th>
+              <th>County</th>
+              <th>Intersection</th>
+              <th>Method</th>
+              <th>GPS Start</th>
+              <th>GPS End</th>
+              <th>Dimensions</th>
+              <th>Settlement</th>
+              <th>Notes</th>
+              <th>Driving Directions Override</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${locations.map((item, index) => `
+              <tr>
+                <td><input value="${escapeHtml(item.zone)}" onchange="updateField(${index}, 'zone', this.value)"></td>
+                <td><input value="${escapeHtml(item.location)}" onchange="updateField(${index}, 'location', this.value)"></td>
+                <td><input value="${escapeHtml(item.county)}" onchange="updateField(${index}, 'county', this.value)"></td>
+                <td><input value="${escapeHtml(item.nearestIntersection)}" onchange="updateField(${index}, 'nearestIntersection', this.value)"></td>
+                <td><input value="${escapeHtml(item.methodTypes.join(' + '))}" onchange="updateMethods(${index}, this.value)"></td>
+                <td><input placeholder="33.xxxxxx,-96.xxxxxx" value="${escapeHtml(item.gpsStart)}" onchange="updateField(${index}, 'gpsStart', this.value)"></td>
+                <td><input placeholder="33.xxxxxx,-96.xxxxxx" value="${escapeHtml(item.gpsEnd)}" onchange="updateField(${index}, 'gpsEnd', this.value)"></td>
+                <td><input value="${escapeHtml(item.dimensions)}" onchange="updateField(${index}, 'dimensions', this.value)"></td>
+                <td><input value="${escapeHtml(item.settlement)}" onchange="updateField(${index}, 'settlement', this.value)"></td>
+                <td><input value="${escapeHtml(item.notes)}" onchange="updateField(${index}, 'notes', this.value)"></td>
+                <td><textarea onchange="updateField(${index}, 'drivingDirections', this.value)">${escapeHtml(item.drivingDirections)}</textarea></td>
+                <td><span class="status">${escapeHtml(item.status)}</span></td>
+                <td><button class="btn-danger" onclick="deleteRow(${index})">Remove</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function updateField(index, field, value) {
+      locations[index][field] = value;
+      renderSummary();
+      updateZoneSelect();
+    }
+
+    function updateMethods(index, value) {
+      locations[index].methodTypes = value.split('+').map(x => x.trim()).filter(Boolean);
+      renderSummary();
+    }
+
+    function deleteRow(index) {
+      locations.splice(index, 1);
+      renderLocations();
+      renderSummary();
+      updateZoneSelect();
+    }
+
+    function addManualRow() {
+      locations.push({
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        zone: 'Unassigned',
+        location: '',
+        county: document.getElementById('county').value,
+        nearestIntersection: '',
+        methodTypes: ['Method'],
+        dimensions: '',
+        settlement: '',
+        notes: '',
+        laneArea: document.getElementById('defaultLane').value,
+        drivingDirections: '',
+        gpsStart: '',
+        gpsEnd: '',
+        ticketNumber: '',
+        status: 'Draft'
+      });
+      renderLocations();
+      renderSummary();
+      updateZoneSelect();
+    }
+
+    function updateZoneSelect() {
+      const select = document.getElementById('zoneSelect');
+      const zones = [...new Set(locations.map(x => x.zone || 'Unassigned'))];
+      select.innerHTML = zones.map(zone => `<option value="${escapeHtml(zone)}">${escapeHtml(zone)}</option>`).join('');
+    }
+
+    function generateLocateForSelectedZone() {
+      const zone = document.getElementById('zoneSelect').value;
+      const zoneItems = locations.filter(x => (x.zone || 'Unassigned') === zone);
+      document.getElementById('locateOutput').textContent = buildLocateText(zone, zoneItems);
+    }
+
+    function generateAllZones() {
+      const zones = [...new Set(locations.map(x => x.zone || 'Unassigned'))];
+      const output = zones.map(zone => buildLocateText(zone, locations.filter(x => (x.zone || 'Unassigned') === zone))).join('\n\n------------------------------------------------------------\n\n');
+      document.getElementById('locateOutput').textContent = output || 'No zones available.';
+    }
+
+    function buildLocateText(zone, items) {
+      const projectName = document.getElementById('projectName').value || 'KKE Project';
+      const city = document.getElementById('city').value || '';
+      const county = document.getElementById('county').value || '';
+      const poNumber = document.getElementById('poNumber').value || '';
+      const ticketType = document.getElementById('ticketType').value || 'Normal';
+      const natureOfWork = document.getElementById('natureOfWork').value || 'polyurethane concrete stabilization';
+      const workDoneFor = document.getElementById('workDoneFor').value || '';
+      const duration = document.getElementById('duration').value || '';
+      const explosives = document.getElementById('explosives').value || 'No';
+      const whiteLined = document.getElementById('whiteLined').value || 'No';
+      const directionalDrilling = document.getElementById('directionalDrilling').value || 'No';
+      const deeperThan16 = document.getElementById('deeperThan16').value || '';
+      const defaultLane = document.getElementById('defaultLane').value || 'roadway and adjacent sidewalk/right-of-way areas within the described work limits';
+      const startDate = document.getElementById('startDate').value;
+      const globalDirections = document.getElementById('globalDirections').value || '';
+
+      const streets = [...new Set(items.map(x => x.location).filter(Boolean))].join('; ');
+      const intersections = [...new Set(items.map(x => x.nearestIntersection).filter(Boolean))].join('; ');
+      const counties = [...new Set(items.map(x => x.county || county).filter(Boolean))].join('; ');
+
+      const locationLines = items.map((item, index) => {
+        const method = item.methodTypes.join(' + ');
+        const detailParts = [];
+        if (item.nearestIntersection) detailParts.push(`Nearest intersection: ${item.nearestIntersection}`);
+        if (item.dimensions) detailParts.push(`Approx. dimensions: ${item.dimensions}`);
+        if (item.settlement) detailParts.push(`Settlement: ${item.settlement}`);
+        if (item.gpsStart) detailParts.push(`GPS start: ${item.gpsStart}`);
+        if (item.gpsEnd) detailParts.push(`GPS end: ${item.gpsEnd}`);
+        if (item.notes) detailParts.push(`Notes: ${item.notes}`);
+        if (item.drivingDirections) detailParts.push(`Specific directions: ${item.drivingDirections}`);
+        return `${index + 1}. ${item.location} — ${method}${detailParts.length ? `\n   ${detailParts.join(' | ')}` : ''}`;
+      }).join('\n');
+
+      const gpsLines = items
+        .filter(item => item.gpsStart || item.gpsEnd)
+        .map(item => `${item.location}: ${item.gpsStart ? `Start ${item.gpsStart}` : ''}${item.gpsStart && item.gpsEnd ? ' / ' : ''}${item.gpsEnd ? `End ${item.gpsEnd}` : ''}`)
+        .join('\n');
+
+      return `TEXAS811 LOCATE PACKET DRAFT\n\nPROJECT / TICKET BASICS\nProject: ${projectName}\nTicket Type: ${ticketType}\nCity: ${city}\nCounty: ${counties}\nReference / PO: ${poNumber}\nWork Done For: ${workDoneFor}\nLocate Zone: ${zone}\n${startDate ? `Planned Start Date: ${startDate}\n` : ''}Duration: ${duration}\n\nTEXAS811 SELECTIONS\nNature of Work: ${natureOfWork}\nExplosives: ${explosives}\nWhite Lined: ${whiteLined}\nDirectional Drilling: ${directionalDrilling}\nDeeper Than 16 Inches: ${deeperThan16}\n\nWORK SITE ADDRESS / STREET\n${streets}\n\nNEAREST INTERSECTION(S)\n${intersections || 'Review and enter nearest cross street/intersection before submitting.'}\n\nDRIVING DIRECTIONS\n${globalDirections}\n\nUse the listed street/intersection and GPS limits below to define the work area. Work is limited to the specific roadway panels, curb line, sidewalk, and right-of-way areas described in this locate zone.\n\nWORK SITE LOCATION INSTRUCTIONS\nNeed all utilities located within the ${defaultLane}. Include both sides of the roadway where the description states across street, across roadway, or opposite side. Mark from the starting limit to the ending limit where GPS coordinates are provided.\n\nADDITIONAL INFORMATION\nKKE Concrete Lifting will be performing polyurethane concrete lifting, leveling, and stabilization. Work includes drilling 5/8-inch holes through existing concrete roadway and/or sidewalk panels and injecting high-density polyurethane foam beneath the slab. Deep injection areas may include tubing to approximately 4 feet below the concrete to stabilize weak subgrade soils. This is spot repair / slab stabilization, not open trench excavation.\n\nWORK LOCATIONS INCLUDED\n${locationLines}\n\nGPS COORDINATES\n${gpsLines || 'No GPS coordinates entered. Add start/end GPS coordinates when available or define the area using the Texas811 map.'}\n\nLOCATOR NOTES\n- Please mark all public and private utilities within and immediately adjacent to the work limits.\n- Include roadway panels, curb line, sidewalk areas, parkway/right-of-way areas, and any area that may be affected by drilling or polyurethane injection.\n- If limits are unclear, contact KKE before marking incomplete areas.\n- Do not mark only the intersection if the work area extends along the street or across the roadway.`;
+    }
+
+    function copyLocateText() {
+      const text = document.getElementById('locateOutput').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Locate packet copied.');
+      }).catch(() => {
+        alert('Copy failed. You can manually select and copy the text.');
+      });
+    }
+
+    function downloadCsv() {
+      if (!locations.length) return alert('No locations to download.');
+      const headers = ['Zone', 'Location', 'County', 'Nearest Intersection', 'Method Types', 'GPS Start', 'GPS End', 'Dimensions', 'Settlement', 'Notes', 'Driving Directions', 'Status'];
+      const rows = locations.map(item => [
+        item.zone,
+        item.location,
+        item.county,
+        item.nearestIntersection,
+        item.methodTypes.join(' + '),
+        item.gpsStart,
+        item.gpsEnd,
+        item.dimensions,
+        item.settlement,
+        item.notes,
+        item.drivingDirections,
+        item.status
+      ]);
+      const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell || '').replace(/"/g, '""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'kke-texas811-locate-packets.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
