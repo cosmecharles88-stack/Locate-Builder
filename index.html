@@ -276,6 +276,8 @@
       <div class="card">
         <h2>3. Quick Summary</h2>
         <div id="summary" class="empty">No locations extracted yet.</div>
+        <label>GPS Diagnostic Log</label>
+        <div id="gpsDebug" class="locate-output" style="min-height:90px; font-size:12px;">No GPS attempt yet.</div>
         <label for="globalDirections">Default Driving Directions Starter</label>
         <textarea id="globalDirections" class="small-textarea">From the nearest major roadway, travel to the listed work street/intersection. Locate limits are defined by the BEGIN LOCATE and END LOCATE GPS coordinates below.</textarea>
         <p class="footer-note">Best Texas811 wording uses a beginning point, direction of travel, distance, end point, side of road, and locate width.</p>
@@ -568,6 +570,20 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
 
     let googleMapsLoadPromise = null;
 
+    function gpsLog(message) {
+      const box = document.getElementById('gpsDebug');
+      if (!box) return;
+      const timestamp = new Date().toLocaleTimeString();
+      if (box.textContent === 'No GPS attempt yet.') box.textContent = '';
+      box.textContent += `[${timestamp}] ${message}
+`;
+    }
+
+    function clearGpsLog() {
+      const box = document.getElementById('gpsDebug');
+      if (box) box.textContent = '';
+    }
+
     function loadGoogleMaps(key) {
       if (window.google && window.google.maps && window.google.maps.Geocoder) {
         return Promise.resolve();
@@ -597,37 +613,69 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
     }
 
     async function generateCoordinatesForAll() {
+      clearGpsLog();
+      gpsLog('Starting GPS coordinate generation...');
+
       const key = document.getElementById('googleApiKey').value.trim();
-      if (!key) return alert('Paste your Google Maps API key first.');
+      if (!key) {
+        gpsLog('FAILED: No Google Maps API key entered.');
+        return alert('Paste your Google Maps API key first.');
+      }
+
+      gpsLog(`Locations to geocode: ${locations.length}`);
 
       try {
+        gpsLog('Loading Google Maps JavaScript API...');
         await loadGoogleMaps(key);
+        gpsLog('Google Maps JavaScript API loaded successfully.');
       } catch (error) {
         console.error(error);
-        alert('Google Maps failed to load. Check that Maps JavaScript API is enabled and your API key restrictions allow this site.');
+        gpsLog(`FAILED TO LOAD GOOGLE MAPS: ${error.message}`);
+        alert('Google Maps failed to load. Check Maps JavaScript API, billing, and key restrictions.');
         return;
       }
 
       const geocoder = new google.maps.Geocoder();
+      let completed = 0;
 
       for (let i = 0; i < locations.length; i++) {
         await generateCoordinatesForRow(i, geocoder);
+        completed++;
       }
 
       renderLocations();
       renderSummary();
-      alert('GPS coordinate generation complete. Review start/end points before submitting.');
+      gpsLog(`Finished. Processed ${completed} location rows.`);
+      alert('GPS coordinate generation complete. Review the GPS Diagnostic Log and start/end points before submitting.');
     }
 
     async function generateCoordinatesForRow(index, geocoder) {
       const item = locations[index];
-      if (!item.gpsStart && item.startPoint) locations[index].gpsStart = await geocodeAddress(item.startPoint, geocoder);
-      if (!item.gpsEnd && item.endPoint) locations[index].gpsEnd = await geocodeAddress(item.endPoint, geocoder);
+
+      if (!item) return;
+
+      gpsLog(`Row ${index + 1}: ${item.location}`);
+      gpsLog(`  Start address: ${item.startPoint || 'MISSING'}`);
+      gpsLog(`  End address: ${item.endPoint || 'MISSING'}`);
+
+      if (!item.gpsStart && item.startPoint) {
+        locations[index].gpsStart = await geocodeAddress(item.startPoint, geocoder);
+        gpsLog(`  Start GPS result: ${locations[index].gpsStart || 'NO RESULT'}`);
+      }
+
+      if (!item.gpsEnd && item.endPoint) {
+        locations[index].gpsEnd = await geocodeAddress(item.endPoint, geocoder);
+        gpsLog(`  End GPS result: ${locations[index].gpsEnd || 'NO RESULT'}`);
+      }
     }
 
     function geocodeAddress(address, geocoder) {
       return new Promise(resolve => {
+        gpsLog(`  Geocoding: ${address}`);
+
         geocoder.geocode({ address }, (results, status) => {
+          gpsLog(`  Google status: ${status}`);
+
           if (status !== 'OK' || !results || !results.length) {
             console.warn('Geocode failed:', status, address);
             resolve('');
@@ -635,6 +683,8 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
           }
 
           const loc = results[0].geometry.location;
+          const formatted = results[0].formatted_address || '';
+          gpsLog(`  Matched: ${formatted}`);
           resolve(`${loc.lat().toFixed(6)},${loc.lng().toFixed(6)}`);
         });
       });
