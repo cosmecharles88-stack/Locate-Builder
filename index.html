@@ -522,18 +522,17 @@ function mergeContinuousLocations(items){
 }
 
 function shouldMergeLocations(a,b){
-  const aLoc=String(a.location||'').toLowerCase();
-  const bLoc=String(b.location||'').toLowerCase();
+  const aLoc=String(a.location||'').trim();
+  const bLoc=String(b.location||'').trim();
 
-  const streets=['wakefield','darcy','burnley','prescott','wembley','birmington','kirkfield','bonny bank','lindsay'];
+  // IMPORTANT OPERATIONAL RULE:
+  // Only merge if the estimate heading is the same physical locate area.
+  // Do NOT merge merely because locations share a street name.
+  // Example: 2920 Prescott, Prescott at Burnley, and Prescott at Wembley
+  // must remain separate locate tickets.
+  if(normalize(aLoc)===normalize(bLoc))return true;
 
-  const aStreet=streets.find(s=>aLoc.includes(s));
-  const bStreet=streets.find(s=>bLoc.includes(s));
-
-  if(!aStreet||!bStreet)return false;
-  if(aStreet!==bStreet)return false;
-
-  return true;
+  return false;
 }
 
 function buildMergedLocationName(a,b){
