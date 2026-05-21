@@ -484,6 +484,12 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
             gpsStart: coords[0] || '',
             gpsEnd: coords[1] || '',
             ticketNumber: '',
+            startPoint: '',
+            endPoint: '',
+            direction: '',
+            linearFeet: '',
+            locateWidth: '15 ft each side of work area',
+            sideOfRoad: 'Both Sides',
             status: 'Draft'
           });
         }
@@ -601,6 +607,12 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
               <th>County</th>
               <th>Intersection</th>
               <th>Method</th>
+              <th>Start Point</th>
+              <th>End Point</th>
+              <th>Direction</th>
+              <th>Approx. LF</th>
+              <th>Locate Width</th>
+              <th>Side of Road</th>
               <th>GPS Start</th>
               <th>GPS End</th>
               <th>Dimensions</th>
@@ -619,6 +631,21 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
                 <td><input value="${escapeHtml(item.county)}" onchange="updateField(${index}, 'county', this.value)"></td>
                 <td><input value="${escapeHtml(item.nearestIntersection)}" onchange="updateField(${index}, 'nearestIntersection', this.value)"></td>
                 <td><input value="${escapeHtml(item.methodTypes.join(' + '))}" onchange="updateMethods(${index}, this.value)"></td>
+                <td><input placeholder="8341 Burnley Dr or GPS" value="${escapeHtml(item.startPoint || '')}" onchange="updateField(${index}, 'startPoint', this.value)"></td>
+                <td><input placeholder="8349 Burnley Dr or GPS" value="${escapeHtml(item.endPoint || '')}" onchange="updateField(${index}, 'endPoint', this.value)"></td>
+                <td><input placeholder="Eastbound / Northbound" value="${escapeHtml(item.direction || '')}" onchange="updateField(${index}, 'direction', this.value)"></td>
+                <td><input placeholder="220" value="${escapeHtml(item.linearFeet || '')}" onchange="updateField(${index}, 'linearFeet', this.value)"></td>
+                <td><input placeholder="15 ft each side" value="${escapeHtml(item.locateWidth || '')}" onchange="updateField(${index}, 'locateWidth', this.value)"></td>
+                <td>
+                  <select onchange="updateField(${index}, 'sideOfRoad', this.value)">
+                    <option value="Both Sides" ${item.sideOfRoad === 'Both Sides' ? 'selected' : ''}>Both Sides</option>
+                    <option value="North Side" ${item.sideOfRoad === 'North Side' ? 'selected' : ''}>North Side</option>
+                    <option value="South Side" ${item.sideOfRoad === 'South Side' ? 'selected' : ''}>South Side</option>
+                    <option value="East Side" ${item.sideOfRoad === 'East Side' ? 'selected' : ''}>East Side</option>
+                    <option value="West Side" ${item.sideOfRoad === 'West Side' ? 'selected' : ''}>West Side</option>
+                    <option value="Across Street" ${item.sideOfRoad === 'Across Street' ? 'selected' : ''}>Across Street</option>
+                  </select>
+                </td>
                 <td><input placeholder="33.xxxxxx,-96.xxxxxx" value="${escapeHtml(item.gpsStart)}" onchange="updateField(${index}, 'gpsStart', this.value)"></td>
                 <td><input placeholder="33.xxxxxx,-96.xxxxxx" value="${escapeHtml(item.gpsEnd)}" onchange="updateField(${index}, 'gpsEnd', this.value)"></td>
                 <td><input value="${escapeHtml(item.dimensions)}" onchange="updateField(${index}, 'dimensions', this.value)"></td>
@@ -677,7 +704,13 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
         gpsStart: '',
         gpsEnd: '',
         ticketNumber: '',
-        status: 'Draft'
+        startPoint: '',
+            endPoint: '',
+            direction: '',
+            linearFeet: '',
+            locateWidth: '15 ft each side of work area',
+            sideOfRoad: 'Both Sides',
+            status: 'Draft'
       });
       renderLocations();
       renderSummary();
@@ -741,7 +774,18 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
         .map(item => `${item.location}: ${item.gpsStart ? `Start ${item.gpsStart}` : ''}${item.gpsStart && item.gpsEnd ? ' / ' : ''}${item.gpsEnd ? `End ${item.gpsEnd}` : ''}`)
         .join('\n');
 
-      return `TEXAS811 LOCATE PACKET DRAFT\n\nPROJECT / TICKET BASICS\nProject: ${projectName}\nTicket Type: ${ticketType}\nCity: ${city}\nCounty: ${counties}\nReference / PO: ${poNumber}\nWork Done For: ${workDoneFor}\nLocate Zone: ${zone}\n${startDate ? `Planned Start Date: ${startDate}\n` : ''}Duration: ${duration}\n\nTEXAS811 SELECTIONS\nNature of Work: ${natureOfWork}\nExplosives: ${explosives}\nWhite Lined: ${whiteLined}\nDirectional Drilling: ${directionalDrilling}\nDeeper Than 16 Inches: ${deeperThan16}\n\nWORK SITE ADDRESS / STREET\n${streets}\n\nNEAREST INTERSECTION(S)\n${intersections || 'Review and enter nearest cross street/intersection before submitting.'}\n\nDRIVING DIRECTIONS\n${globalDirections}\n\nUse the listed street/intersection and GPS limits below to define the work area. Work is limited to the specific roadway panels, curb line, sidewalk, and right-of-way areas described in this locate zone.\n\nWORK SITE LOCATION INSTRUCTIONS\nNeed all utilities located within the ${defaultLane}. Include both sides of the roadway where the description states across street, across roadway, or opposite side. Mark from the starting limit to the ending limit where GPS coordinates are provided.\n\nADDITIONAL INFORMATION\nKKE Concrete Lifting will be performing polyurethane concrete lifting, leveling, and stabilization. Work includes drilling 5/8-inch holes through existing concrete roadway and/or sidewalk panels and injecting high-density polyurethane foam beneath the slab. Deep injection areas may include tubing to approximately 4 feet below the concrete to stabilize weak subgrade soils. This is spot repair / slab stabilization, not open trench excavation.\n\nWORK LOCATIONS INCLUDED\n${locationLines}\n\nGPS COORDINATES\n${gpsLines || 'No GPS coordinates entered. Add start/end GPS coordinates when available or define the area using the Texas811 map.'}\n\nLOCATOR NOTES\n- Please mark all public and private utilities within and immediately adjacent to the work limits.\n- Include roadway panels, curb line, sidewalk areas, parkway/right-of-way areas, and any area that may be affected by drilling or polyurethane injection.\n- If limits are unclear, contact KKE before marking incomplete areas.\n- Do not mark only the intersection if the work area extends along the street or across the roadway.`;
+      const limitDefinitions = items.map((item, index) => {
+        const start = item.startPoint || item.gpsStart || 'DEFINE START POINT';
+        const end = item.endPoint || item.gpsEnd || 'DEFINE END POINT';
+        const direction = item.direction || 'DEFINE DIRECTION';
+        const lf = item.linearFeet || 'DEFINE LF';
+        const width = item.locateWidth || '15 ft each side of work area';
+        const side = item.sideOfRoad || 'Both Sides';
+
+        return `${index + 1}. BEGIN LOCATE at ${start}. Continue ${direction} approximately ${lf} LF to ${end}. Locate width: ${width}. Side of roadway: ${side}.`;
+      }).join('\n');
+
+      return `TEXAS811 LOCATE PACKET DRAFT\n\nPROJECT / TICKET BASICS\nProject: ${projectName}\nTicket Type: ${ticketType}\nCity: ${city}\nCounty: ${counties}\nReference / PO: ${poNumber}\nWork Done For: ${workDoneFor}\nLocate Zone: ${zone}\n${startDate ? `Planned Start Date: ${startDate}\n` : ''}Duration: ${duration}\n\nTEXAS811 SELECTIONS\nNature of Work: ${natureOfWork}\nExplosives: ${explosives}\nWhite Lined: ${whiteLined}\nDirectional Drilling: ${directionalDrilling}\nDeeper Than 16 Inches: ${deeperThan16}\n\nWORK SITE ADDRESS / STREET\n${streets}\n\nNEAREST INTERSECTION(S)\n${intersections || 'Review and enter nearest cross street/intersection before submitting.'}\n\nDRIVING DIRECTIONS\n${globalDirections}\n\nUse the listed street/intersection and GPS limits below to define the work area. Work is limited to the specific roadway panels, curb line, sidewalk, and right-of-way areas described in this locate zone.\n\nWORK SITE LOCATION INSTRUCTIONS\nNeed all utilities located within the ${defaultLane}. Work limits are defined below using clear start and stop points. Locate from the BEGIN LOCATE point to the END LOCATE point for each listed area. Include roadway panels, curb line, sidewalk, and adjacent right-of-way within the listed locate width.\n\nADDITIONAL INFORMATION\nKKE Concrete Lifting will be performing polyurethane concrete lifting, leveling, and stabilization. Work includes drilling 5/8-inch holes through existing concrete roadway and/or sidewalk panels and injecting high-density polyurethane foam beneath the slab. Deep injection areas may include tubing to approximately 4 feet below the concrete to stabilize weak subgrade soils. This is spot repair / slab stabilization, not open trench excavation.\n\nCLEAR START / STOP LIMITS\n${limitDefinitions}\n\nWORK LOCATIONS INCLUDED\n${locationLines}\n\nGPS COORDINATES\n${gpsLines || 'No GPS coordinates entered. Add start/end GPS coordinates when available or define the area using the Texas811 map.'}\n\nLOCATOR NOTES\n- Please mark all public and private utilities within and immediately adjacent to the work limits.\n- Include roadway panels, curb line, sidewalk areas, parkway/right-of-way areas, and any area that may be affected by drilling or polyurethane injection.\n- If limits are unclear, contact KKE before marking incomplete areas.\n- Do not mark only the intersection if the work area extends along the street or across the roadway.`;
     }
 
     function copyLocateText() {
