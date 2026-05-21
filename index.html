@@ -209,6 +209,7 @@ td input{min-width:150px}
       <button id="zoneBtn">Auto-Assign Zones</button>
       <button id="gpsBtn">Generate GPS Coordinates</button>
       <button class="btn-secondary" id="intersectionBtn">Auto-Find Intersections</button>
+      <button class="btn-secondary" id="routeBtn">Generate Route Directions</button>
       <button class="btn-secondary" id="csvBtn">Download CSV</button>
     </div>
   </section>
@@ -546,7 +547,7 @@ function loadTributeExample(){
 }
 
 function guessIntersection(location){
-  const clean = cleanLocationName(location);
+  const clean = simplifyIntersectionText(cleanLocationName(location));
   const lower = clean.toLowerCase();
 
   if(lower.includes('burnley') && lower.includes('prescott')) return 'Burnley & Prescott';
@@ -556,7 +557,11 @@ function guessIntersection(location){
 
   if(lower.includes(' at ')){
     const parts = clean.split(/ at /i);
-    if(parts.length >= 2) return parts[0].trim() + ' & ' + parts[1].trim();
+    if(parts.length >= 2) return simplifyIntersectionText(parts[0].trim() + ' & ' + parts[1].trim());
+  }
+
+  if(isUsableIntersection(clean)){
+    return simplifyIntersectionText(clean);
   }
 
   return '';
@@ -771,7 +776,54 @@ function cleanGoogleIntersectionName(formattedAddress){
   text = text.replace(/, United States$/i,'');
   text = text.replace(/\s+/g,' ');
 
+  text = simplifyIntersectionText(text);
+
   return text.trim();
+}
+
+function simplifyIntersectionText(value){
+  let text = String(value || '').trim();
+  if(!text) return '';
+
+  // If Google or the parser returns several pieces, keep only the first usable piece.
+  const parts = text
+    .split(';')
+    .map(part => part.trim())
+    .filter(Boolean);
+
+  if(parts.length){
+    const intersectionPart = parts.find(part => isUsableIntersection(part));
+    if(intersectionPart) text = intersectionPart;
+    else text = parts[0];
+  }
+
+  text = text.replace(/,\s*The Colony,\s*TX\s*\d{5}/gi,'');
+  text = text.replace(/,\s*[A-Za-z .'-]+,\s*TX\s*\d{5}/gi,'');
+  text = text.replace(/,\s*TX\s*\d{5}/gi,'');
+  text = text.replace(/,\s*Texas\s*\d{5}/gi,'');
+  text = text.replace(/,\s*United States/gi,'');
+  text = text.replace(/,\s*USA/gi,'');
+  text = text.replace(/\s+/g,' ').trim();
+
+  // Remove noisy locate/estimate phrases if they sneak into the intersection field.
+  text = stripAfterBadPhrase(text);
+  text = text.replace(/and across street/gi,'');
+  text = text.replace(/and across the street/gi,'');
+  text = text.replace(/\s+/g,' ').trim();
+
+  return text;
+}
+
+function isUsableIntersection(value){
+  const text = String(value || '').trim().toLowerCase();
+  if(!text) return false;
+  if(text.includes('this location')) return false;
+  if(text.includes('there are')) return false;
+  if(text.includes('across street')) return false;
+  if(text.includes('holding water')) return false;
+  if(/\d{3,6}\s*-\s*\d{3,6}/.test(text)) return false;
+
+  return text.includes('&') || text.includes(' and ') || text.includes(' at ');
 }
 
 function getRouteStreetNameFromReverseResults(results){
@@ -845,6 +897,33 @@ function shouldAutoFindIntersection(item){
 }
 
 
+
+function buildFallbackRouteDirections(item){
+  const fromName = simplifyIntersectionText(item.driveFrom || item.nearestIntersection || 'nearest intersection');
+  const beginGps = item.gpsStart || '';
+  const fromGps = item.driveFromGps || '';
+
+  if(!beginGps){
+    return 'Route directions need review. BEGIN LOCATE GPS is missing.';
+  }
+
+  const fromPoint = parseLatLng(fromGps);
+  const beginPoint = parseLatLng(beginGps);
+
+  if(fromPoint && beginPoint){
+    const feet = distanceFeet(fromGps,beginGps);
+    const bearing = bearingDegrees(fromPoint,beginPoint);
+    const direction = cardinalFromBearing(bearing);
+
+    if(feet && feet > 25){
+      return 'From ' + fromName + ', travel approximately ' + feet + ' ft ' + direction + ' to BEGIN LOCATE at GPS ' + beginGps + '.';
+    }
+  }
+
+  return 'At or near ' + fromName + ', proceed to BEGIN LOCATE at GPS ' + beginGps + '.';
+}
+
+
 async function getRouteDirectionsFromGoogle(originGps,destinationGps,apiKey){
   const origin=parseLatLng(originGps);
   const destination=parseLatLng(destinationGps);
@@ -871,7 +950,8 @@ async function getRouteDirectionsFromGoogle(originGps,destinationGps,apiKey){
     });
 
     if(!response.ok){
-      gpsLog('Routes API status: '+response.status);
+      const errorText=await response.text();
+      gpsLog('Routes API failed. HTTP '+response.status+'. '+errorText.slice(0,180));
       return '';
     }
 
@@ -886,7 +966,7 @@ async function getRouteDirectionsFromGoogle(originGps,destinationGps,apiKey){
     return summarizeGoogleRoute(route,destinationGps);
   }catch(error){
     console.warn('Routes API failed:',error);
-    gpsLog('Routes API failed; using fallback wording.');
+    gpsLog('Routes API failed: '+error.message);
     return '';
   }
 }
@@ -957,8 +1037,8 @@ async function generateCoordinatesForAll(){
       const autoIntersection = await reverseGeocodeForNearestIntersection(item.gpsStart,geocoder);
 
       if(autoIntersection){
-        item.nearestIntersection = autoIntersection;
-        item.driveFrom = autoIntersection;
+        item.nearestIntersection = simplifyIntersectionText(autoIntersection);
+        item.driveFrom = simplifyIntersectionText(autoIntersection);
       }
     }
 
@@ -980,8 +1060,12 @@ async function generateCoordinatesForAll(){
         item.distanceToBeginFeet = '';
       }
 
-      if(!item.routeDirections && calculatedToBegin && calculatedToBegin > 25){
-        item.routeDirections = await getRouteDirectionsFromGoogle(item.driveFromGps,item.gpsStart,key);
+      if(!item.routeDirections){
+        let googleRouteText='';
+        if(calculatedToBegin && calculatedToBegin > 25){
+          googleRouteText = await getRouteDirectionsFromGoogle(item.driveFromGps,item.gpsStart,key);
+        }
+        item.routeDirections = googleRouteText || buildFallbackRouteDirections(item);
       }
     }
   }
@@ -1360,6 +1444,47 @@ function clearAll(){
 }
 
 
+
+async function generateRouteDirectionsForAll(){
+  clearGpsLog();
+
+  const key = val('googleApiKey').trim();
+  if(!key){
+    alert('Paste Google Maps API key first.');
+    return;
+  }
+
+  for(let i=0; i<locations.length; i++){
+    const item = locations[i];
+
+    if(!item.driveFrom){
+      item.driveFrom = item.nearestIntersection || '';
+    }
+
+    if(item.driveFromGps && item.gpsStart){
+      const calculatedToBegin = distanceFeet(item.driveFromGps,item.gpsStart);
+
+      if(calculatedToBegin && calculatedToBegin > 25){
+        item.distanceToBeginFeet = String(calculatedToBegin);
+      }
+
+      let googleRouteText = '';
+      if(calculatedToBegin && calculatedToBegin > 25){
+        googleRouteText = await getRouteDirectionsFromGoogle(item.driveFromGps,item.gpsStart,key);
+      }
+
+      item.routeDirections = googleRouteText || buildFallbackRouteDirections(item);
+    }else{
+      item.routeDirections = buildFallbackRouteDirections(item);
+    }
+  }
+
+  renderLocations();
+  gpsLog('Finished generating route directions.');
+  alert('Route direction generation complete. Review the Route Directions column.');
+}
+
+
 async function autoFindIntersectionsForAll(){
   clearGpsLog();
 
@@ -1391,8 +1516,8 @@ async function autoFindIntersectionsForAll(){
       const autoIntersection = await reverseGeocodeForNearestIntersection(item.gpsStart,geocoder);
 
       if(autoIntersection){
-        item.nearestIntersection = autoIntersection;
-        item.driveFrom = autoIntersection;
+        item.nearestIntersection = simplifyIntersectionText(autoIntersection);
+        item.driveFrom = simplifyIntersectionText(autoIntersection);
       }
     }
 
@@ -1410,8 +1535,12 @@ async function autoFindIntersectionsForAll(){
         item.distanceToBeginFeet = String(calculatedToBegin);
       }
 
-      if(!item.routeDirections && calculatedToBegin && calculatedToBegin > 25){
-        item.routeDirections = await getRouteDirectionsFromGoogle(item.driveFromGps,item.gpsStart,key);
+      if(!item.routeDirections){
+        let googleRouteText='';
+        if(calculatedToBegin && calculatedToBegin > 25){
+          googleRouteText = await getRouteDirectionsFromGoogle(item.driveFromGps,item.gpsStart,key);
+        }
+        item.routeDirections = googleRouteText || buildFallbackRouteDirections(item);
       }
     }
   }
@@ -1498,6 +1627,8 @@ function runAppCheck(){
   results.push(typeof generateAllZones === 'function' ? '✅ Locate generation function loaded' : '❌ Locate generation function missing');
   results.push(typeof getRouteDirectionsFromGoogle === 'function' ? '✅ Routes helper loaded' : '❌ Routes helper missing');
   results.push(typeof reverseGeocodeForNearestIntersection === 'function' ? '✅ Nearest intersection helper loaded' : '❌ Nearest intersection helper missing');
+  results.push(typeof buildFallbackRouteDirections === 'function' ? '✅ Route fallback helper loaded' : '❌ Route fallback helper missing');
+  results.push(simplifyIntersectionText('Broughton & Telford; 3408-3568 Kirkfield Ct, The Colony, TX 75056') === 'Broughton & Telford' ? '✅ Intersection cleanup passed' : '❌ Intersection cleanup failed');
   results.push(el('locatePreview') ? '✅ Locate preview panel found' : '❌ Locate preview panel missing');
   results.push(el('locationsTable') ? '✅ Locations table found' : '❌ Locations table missing');
 
@@ -1548,6 +1679,7 @@ function attachEvents(){
   el('zoneBtn').addEventListener('click',() => autoAssignZones(true));
   el('gpsBtn').addEventListener('click',generateCoordinatesForAll);
   el('intersectionBtn').addEventListener('click',autoFindIntersectionsForAll);
+  el('routeBtn').addEventListener('click',generateRouteDirectionsForAll);
   el('csvBtn').addEventListener('click',downloadCsv);
   el('genSelectedBtn').addEventListener('click',generateLocateForSelectedZone);
   el('genAllBtn').addEventListener('click',generateAllZones);
