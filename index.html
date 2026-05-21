@@ -566,12 +566,52 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
       }
     }
 
+    let googleMapsLoadPromise = null;
+
+    function loadGoogleMaps(key) {
+      if (window.google && window.google.maps && window.google.maps.Geocoder) {
+        return Promise.resolve();
+      }
+
+      if (googleMapsLoadPromise) {
+        return googleMapsLoadPromise;
+      }
+
+      googleMapsLoadPromise = new Promise((resolve, reject) => {
+        const callbackName = `initKkeGoogleMaps_${Date.now()}`;
+
+        window[callbackName] = () => {
+          delete window[callbackName];
+          resolve();
+        };
+
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&callback=${callbackName}`;
+        script.async = true;
+        script.defer = true;
+        script.onerror = () => reject(new Error('Google Maps JavaScript API failed to load.'));
+        document.head.appendChild(script);
+      });
+
+      return googleMapsLoadPromise;
+    }
+
     async function generateCoordinatesForAll() {
       const key = document.getElementById('googleApiKey').value.trim();
       if (!key) return alert('Paste your Google Maps API key first.');
 
+      try {
+        await loadGoogleMaps(key);
+      } catch (error) {
+        console.error(error);
+        alert('Google Maps failed to load. Check that Maps JavaScript API is enabled and your API key restrictions allow this site.');
+        return;
+      }
+
+      const geocoder = new google.maps.Geocoder();
+
       for (let i = 0; i < locations.length; i++) {
-        await generateCoordinatesForRow(i, key);
+        await generateCoordinatesForRow(i, geocoder);
       }
 
       renderLocations();
@@ -579,25 +619,25 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
       alert('GPS coordinate generation complete. Review start/end points before submitting.');
     }
 
-    async function generateCoordinatesForRow(index, key) {
+    async function generateCoordinatesForRow(index, geocoder) {
       const item = locations[index];
-      if (!item.gpsStart && item.startPoint) locations[index].gpsStart = await geocodeAddress(item.startPoint, key);
-      if (!item.gpsEnd && item.endPoint) locations[index].gpsEnd = await geocodeAddress(item.endPoint, key);
+      if (!item.gpsStart && item.startPoint) locations[index].gpsStart = await geocodeAddress(item.startPoint, geocoder);
+      if (!item.gpsEnd && item.endPoint) locations[index].gpsEnd = await geocodeAddress(item.endPoint, geocoder);
     }
 
-    async function geocodeAddress(address, key) {
-      try {
-        const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${encodeURIComponent(key)}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.status && data.status !== 'OK') console.warn('Geocode status:', data.status, data.error_message || address);
-        if (!data.results || !data.results.length) return '';
-        const loc = data.results[0].geometry.location;
-        return `${loc.lat.toFixed(6)},${loc.lng.toFixed(6)}`;
-      } catch (err) {
-        console.error('Geocode failed', err);
-        return '';
-      }
+    function geocodeAddress(address, geocoder) {
+      return new Promise(resolve => {
+        geocoder.geocode({ address }, (results, status) => {
+          if (status !== 'OK' || !results || !results.length) {
+            console.warn('Geocode failed:', status, address);
+            resolve('');
+            return;
+          }
+
+          const loc = results[0].geometry.location;
+          resolve(`${loc.lat().toFixed(6)},${loc.lng().toFixed(6)}`);
+        });
+      });
     }
 
     function renderSummary() {
