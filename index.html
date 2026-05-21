@@ -690,6 +690,7 @@ function parseEstimate(){
       sideOfRoad:/across/i.test(context) ? 'Across Street' : 'Both Sides',
       gpsStart:coords[0] || '',
       gpsEnd:coords[1] || '',
+      roadOffsetSide:getVal('defaultOffsetSide')||'right',
       status:'Draft'
     });
   });
@@ -1652,6 +1653,95 @@ function buildAddressWorkAreaLines(items){
 }
 
 
+
+function shouldApplyRoadOffset(item){
+  if(isIntersectionLocate(item)) return false;
+  if((item.roadOffsetSide || 'right') === 'none') return false;
+  if(!item.gpsStart || !item.gpsEnd) return false;
+  if(!hasDifferentStartEndGps(item)) return false;
+
+  return true;
+}
+
+function getRoadOffsetFeet(){
+  const n = parseInt(getVal('roadOffsetFeet') || '45',10);
+  return n && n > 0 ? n : 0;
+}
+
+function buildRoadAdjustedBufferedGps(item,bufferFeet){
+  const startRaw = item.gpsStart || '';
+  const endRaw = item.gpsEnd || '';
+
+  const startPoint = parseLatLng(startRaw);
+  const endPoint = parseLatLng(endRaw);
+
+  if(!startPoint || !endPoint){
+    return {start:startRaw,end:endRaw,roadOffsetApplied:false,bufferApplied:false};
+  }
+
+  if(!shouldApplyRoadOffset(item)){
+    const buffered = bufferedGps(startRaw,endRaw,bufferFeet);
+    return {start:buffered.start,end:buffered.end,roadOffsetApplied:false,bufferApplied:!!buffered.ok};
+  }
+
+  const offsetFeet = getRoadOffsetFeet();
+  if(!offsetFeet){
+    const buffered = bufferedGps(startRaw,endRaw,bufferFeet);
+    return {start:buffered.start,end:buffered.end,roadOffsetApplied:false,bufferApplied:!!buffered.ok};
+  }
+
+  const lineBearing = bearingDegrees(startPoint,endPoint);
+  const side = item.roadOffsetSide || getVal('defaultOffsetSide') || 'right';
+  const offsetBearing = side === 'left' ? (lineBearing + 270) % 360 : (lineBearing + 90) % 360;
+
+  const roadStart = offsetPoint(startPoint,offsetBearing,offsetFeet);
+  const roadEnd = offsetPoint(endPoint,offsetBearing,offsetFeet);
+
+  const roadStartText = fmt(roadStart);
+  const roadEndText = fmt(roadEnd);
+
+  const buffered = bufferedGps(roadStartText,roadEndText,bufferFeet);
+
+  return {
+    start:buffered.start,
+    end:buffered.end,
+    roadOffsetApplied:true,
+    roadOffsetFeet:offsetFeet,
+    roadOffsetSide:side,
+    bufferApplied:!!buffered.ok
+  };
+}
+
+function getGpsSupportTextForNormalLocate(item,bufferFeet){
+  if(needsPropertyEndpointReview(item)){
+    return (
+      'START GPS: NEEDS PROPERTY FRONTAGE START POINT\n' +
+      'END GPS: NEEDS PROPERTY FRONTAGE END POINT\n' +
+      'NOTE: Address locates require two GPS endpoints: one at the start of the property/work frontage and one at the end. Enter both endpoints, then regenerate.'
+    );
+  }
+
+  if(item.gpsStart && item.gpsEnd && item.gpsStart !== item.gpsEnd){
+    const adjusted = buildRoadAdjustedBufferedGps(item,bufferFeet);
+    let text = 'START GPS: ' + adjusted.start + '\nEND GPS: ' + adjusted.end;
+
+    if(adjusted.roadOffsetApplied){
+      text += '\nNOTE: GPS points were shifted approximately ' + adjusted.roadOffsetFeet + ' ft toward the roadway using the "' + adjusted.roadOffsetSide + '" road-offset setting, then extended ' + bufferFeet + ' ft before and after the work limits.';
+    }else if(adjusted.bufferApplied){
+      text += '\nNOTE: GPS points include a ' + bufferFeet + ' ft buffer before and after the work limits.';
+    }
+
+    return text;
+  }
+
+  if(item.gpsStart){
+    return 'GPS POINT: ' + item.gpsStart + '\nNOTE: This is a point-style GPS reference. For roadway frontage locates, enter both START and END GPS points.';
+  }
+
+  return 'GPS needs review.';
+}
+
+
 function buildLocateText(zone,items){
   const city = getVal('city');
   const county = getVal('county');
@@ -1701,22 +1791,7 @@ function buildLocateText(zone,items){
 
       instruction += ' We will be injecting polyurethane foam beneath the roadway to level and stabilize concrete.';
 
-      if(needsPropertyEndpointReview(item)){
-        gpsText =
-          'START GPS: NEEDS PROPERTY FRONTAGE START POINT\n' +
-          'END GPS: NEEDS PROPERTY FRONTAGE END POINT\n' +
-          'NOTE: Address locates require two GPS endpoints: one at the start of the property/work frontage and one at the end. Enter both endpoints, then regenerate.';
-      }else{
-        const buffered = bufferedGps(item.gpsStart,item.gpsEnd,bufferFeet);
-        const startGps = item.gpsStart ? buffered.start : '';
-        const endGps = item.gpsEnd ? buffered.end : '';
-
-        if(startGps && endGps && startGps !== endGps){
-          gpsText = 'START GPS: ' + startGps + '\nEND GPS: ' + endGps;
-        }else if(startGps){
-          gpsText = 'GPS POINT: ' + startGps;
-        }
-      }
+      gpsText = getGpsSupportTextForNormalLocate(item,bufferFeet);
     }
 
     return (
@@ -1728,7 +1803,7 @@ function buildLocateText(zone,items){
       instruction + '\n\n' +
       'SUPPORTING GPS\n' +
       gpsText + '\n' +
-      (isIntersectionLocate(item) ? 'Intersection locate uses 100 ft limits in each direction from center GPS.' : bufferFeet + ' ft locate buffer included before and after work limits.')
+      (isIntersectionLocate(item) ? 'Intersection locate uses 100 ft limits in each direction from center GPS.' : 'Roadway GPS uses road-offset projection when enabled, plus '+bufferFeet+' ft buffer before and after work limits.')
     );
   }).join('\n\n--------------------------------\n\n');
 
@@ -1813,7 +1888,7 @@ function getProjectState(){
 function applyProjectState(state){
   if(!state) return;
 
-  ['projectName','city','county','poNumber','workDoneFor','duration','defaultLane','locateBuffer','estimateText','globalDirections'].forEach(id => {
+  ['projectName','city','county','poNumber','workDoneFor','duration','defaultLane','locateBuffer','roadOffsetFeet','defaultOffsetSide','estimateText','globalDirections'].forEach(id => {
     if(el(id)) el(id).value = state[id] || '';
   });
 
