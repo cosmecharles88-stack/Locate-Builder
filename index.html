@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KKE Locate Builder MVP</title>
+  <title>KKE Locate Builder</title>
   <style>
     :root {
       --kke-blue: #0057a8;
@@ -13,9 +13,9 @@
       --text: #111827;
       --muted: #6b7280;
       --border: #d1d5db;
-      --success: #166534;
-      --warning: #92400e;
       --danger: #b91c1c;
+      --warning: #92400e;
+      --success: #166534;
     }
 
     * { box-sizing: border-box; }
@@ -37,7 +37,6 @@
     header h1 {
       margin: 0 0 8px;
       font-size: 28px;
-      letter-spacing: 0.02em;
     }
 
     header p {
@@ -47,7 +46,7 @@
     }
 
     main {
-      width: min(1300px, calc(100% - 24px));
+      width: min(1350px, calc(100% - 24px));
       margin: 18px auto 60px;
     }
 
@@ -59,7 +58,6 @@
 
     @media (min-width: 980px) {
       .grid-2 { grid-template-columns: 1fr 1fr; }
-      .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
     }
 
     .card {
@@ -76,11 +74,11 @@
       color: var(--kke-dark-blue);
     }
 
-    .subtext {
+    .subtext,
+    .footer-note {
       color: var(--muted);
-      font-size: 14px;
+      font-size: 13px;
       line-height: 1.45;
-      margin: -4px 0 14px;
     }
 
     label {
@@ -90,7 +88,9 @@
       font-size: 14px;
     }
 
-    input, textarea, select {
+    input,
+    textarea,
+    select {
       width: 100%;
       border: 1px solid var(--border);
       border-radius: 10px;
@@ -100,12 +100,12 @@
     }
 
     textarea {
-      min-height: 230px;
+      min-height: 220px;
       resize: vertical;
       line-height: 1.4;
     }
 
-    .small-textarea { min-height: 110px; }
+    .small-textarea { min-height: 105px; }
 
     .row {
       display: grid;
@@ -134,11 +134,9 @@
       cursor: pointer;
       background: var(--kke-blue);
       color: white;
-      transition: transform .08s ease, background .15s ease;
     }
 
     button:hover { background: var(--kke-dark-blue); }
-    button:active { transform: scale(0.98); }
 
     .btn-secondary {
       background: #e5e7eb;
@@ -148,7 +146,6 @@
     .btn-secondary:hover { background: #d1d5db; }
 
     .btn-danger { background: var(--danger); }
-    .btn-danger:hover { background: #7f1d1d; }
 
     .pill {
       display: inline-flex;
@@ -162,15 +159,16 @@
       margin: 4px 6px 4px 0;
     }
 
+    .scroll-wrap { overflow-x: auto; }
+
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 12px;
-      overflow: hidden;
-      border-radius: 12px;
     }
 
-    th, td {
+    th,
+    td {
       border-bottom: 1px solid var(--border);
       padding: 10px;
       text-align: left;
@@ -186,8 +184,6 @@
       letter-spacing: .04em;
     }
 
-    tr:last-child td { border-bottom: none; }
-
     td input { min-width: 150px; }
     td textarea { min-height: 70px; min-width: 220px; }
 
@@ -199,6 +195,11 @@
       display: inline-block;
       background: #fef3c7;
       color: var(--warning);
+    }
+
+    .gps-ok {
+      background: #dcfce7;
+      color: var(--success);
     }
 
     .locate-output {
@@ -219,114 +220,51 @@
       font-style: italic;
       padding: 12px 0;
     }
-
-    .footer-note {
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 12px;
-      line-height: 1.45;
-    }
-
-    .scroll-wrap { overflow-x: auto; }
   </style>
 </head>
 <body>
   <header>
     <h1>KKE Locate Builder</h1>
-    <p>Estimate intake → work location extraction → Texas811 fields → GPS-ready locate wording</p>
+    <p>Estimate intake → start/stop limits → Google GPS coordinates → Texas811-ready locate wording</p>
   </header>
 
   <main class="grid">
     <section class="card">
       <h2>1. Texas811 Project Setup</h2>
-      <p class="subtext">These fields match the information Texas811 commonly asks for. The app uses them to generate copy-ready ticket text.</p>
+      <p class="subtext">Paste your Google Maps API key here while testing. Restrict the key in Google Cloud to your GitHub Pages URL.</p>
+
       <div class="row row-4">
-        <div>
-          <label for="projectName">Project Name</label>
-          <input id="projectName" value="Tribute Water Ponding" />
-        </div>
-        <div>
-          <label for="city">City</label>
-          <input id="city" value="The Colony" />
-        </div>
-        <div>
-          <label for="county">County</label>
-          <input id="county" value="Denton" />
-        </div>
-        <div>
-          <label for="poNumber">PO / Reference</label>
-          <input id="poNumber" value="26-05721" />
-        </div>
+        <div><label for="projectName">Project Name</label><input id="projectName" value="Tribute Water Ponding" /></div>
+        <div><label for="city">City</label><input id="city" value="The Colony" /></div>
+        <div><label for="county">County</label><input id="county" value="Denton" /></div>
+        <div><label for="poNumber">PO / Reference</label><input id="poNumber" value="26-05721" /></div>
       </div>
 
       <div class="row row-4">
-        <div>
-          <label for="ticketType">Ticket Type</label>
-          <select id="ticketType">
-            <option>Normal</option>
-            <option>Update</option>
-            <option>Remark</option>
-            <option>Emergency</option>
-          </select>
-        </div>
-        <div>
-          <label for="natureOfWork">Nature of Work</label>
-          <select id="natureOfWork">
-            <option>Polyurethane concrete stabilization</option>
-            <option>Polyurethane lifting and leveling</option>
-            <option>Deep injection and slab stabilization</option>
-            <option>Roadway maintenance</option>
-          </select>
-        </div>
-        <div>
-          <label for="workDoneFor">Work Done For</label>
-          <input id="workDoneFor" value="The City of The Colony" />
-        </div>
-        <div>
-          <label for="duration">How Long Will It Take?</label>
-          <input id="duration" value="1-2 days per locate zone" />
-        </div>
+        <div><label for="ticketType">Ticket Type</label><select id="ticketType"><option>Normal</option><option>Update</option><option>Remark</option><option>Emergency</option></select></div>
+        <div><label for="natureOfWork">Nature of Work</label><select id="natureOfWork"><option>Polyurethane concrete stabilization</option><option>Polyurethane lifting and leveling</option><option>Deep injection and slab stabilization</option><option>Roadway maintenance</option></select></div>
+        <div><label for="workDoneFor">Work Done For</label><input id="workDoneFor" value="The City of The Colony" /></div>
+        <div><label for="duration">How Long Will It Take?</label><input id="duration" value="1-2 days per locate zone" /></div>
       </div>
 
       <div class="row row-4">
-        <div>
-          <label for="explosives">Explosives</label>
-          <select id="explosives"><option>No</option><option>Yes</option></select>
-        </div>
-        <div>
-          <label for="whiteLined">White Lined</label>
-          <select id="whiteLined"><option>No</option><option>Yes</option><option>Not required / map provided</option></select>
-        </div>
-        <div>
-          <label for="directionalDrilling">Directional Drilling</label>
-          <select id="directionalDrilling"><option>No</option><option>Yes</option></select>
-        </div>
-        <div>
-          <label for="deeperThan16">Deeper Than 16 Inches</label>
-          <select id="deeperThan16"><option>Yes - deep injection areas may reach approx. 4 ft</option><option>No</option><option>Varies by location</option></select>
-        </div>
+        <div><label for="explosives">Explosives</label><select id="explosives"><option>No</option><option>Yes</option></select></div>
+        <div><label for="whiteLined">White Lined</label><select id="whiteLined"><option>No</option><option>Yes</option><option>Not required / map provided</option></select></div>
+        <div><label for="directionalDrilling">Directional Drilling</label><select id="directionalDrilling"><option>No</option><option>Yes</option></select></div>
+        <div><label for="deeperThan16">Deeper Than 16 Inches</label><select id="deeperThan16"><option>Yes - DI may reach approx. 4 ft</option><option>No</option><option>Varies by location</option></select></div>
       </div>
 
-      <div class="row row-3">
-        <div>
-          <label for="defaultLane">Default Locate Area</label>
-          <input id="defaultLane" value="roadway panels, curb line, adjacent sidewalk, and right-of-way areas within the described work limits" />
-        </div>
-        <div>
-          <label for="startDate">Planned Start Date</label>
-          <input id="startDate" type="date" />
-        </div>
-        <div>
-          <label for="nearestMajorRoad">Major Road / Starting Reference</label>
-          <input id="nearestMajorRoad" value="Main Street" />
-        </div>
+      <div class="row row-4">
+        <div><label for="defaultLane">Default Locate Area</label><input id="defaultLane" value="roadway panels, curb line, adjacent sidewalk, and right-of-way areas within the described work limits" /></div>
+        <div><label for="startDate">Planned Start Date</label><input id="startDate" type="date" /></div>
+        <div><label for="nearestMajorRoad">Major Road / Starting Reference</label><input id="nearestMajorRoad" value="Main Street" /></div>
+        <div><label for="googleApiKey">Google Maps API Key</label><input id="googleApiKey" type="password" placeholder="Paste key here to generate GPS" /></div>
       </div>
     </section>
 
     <section class="grid grid-2">
       <div class="card">
         <h2>2. Estimate Text Intake</h2>
-        <p class="subtext">Paste the extracted estimate text here. This version also looks for GPS coordinates when they are included in quotes or notes.</p>
         <textarea id="estimateText" placeholder="Paste estimate text here..."></textarea>
         <div class="btn-row">
           <button onclick="parseEstimate()">Extract Work Locations</button>
@@ -339,18 +277,19 @@
         <h2>3. Quick Summary</h2>
         <div id="summary" class="empty">No locations extracted yet.</div>
         <label for="globalDirections">Default Driving Directions Starter</label>
-        <textarea id="globalDirections" class="small-textarea">From the nearest major roadway, travel to the listed work street/intersection. Locate limits are defined by the work locations, roadway panels, curb line, adjacent sidewalk, and any GPS coordinates provided below.</textarea>
-        <p class="footer-note">Tip: Texas811 directions should be traceable: start point, travel direction, cross street/intersection, exact limits, side/lane, and GPS when available.</p>
+        <textarea id="globalDirections" class="small-textarea">From the nearest major roadway, travel to the listed work street/intersection. Locate limits are defined by the BEGIN LOCATE and END LOCATE GPS coordinates below.</textarea>
+        <p class="footer-note">Best Texas811 wording uses a beginning point, direction of travel, distance, end point, side of road, and locate width.</p>
       </div>
     </section>
 
     <section class="card">
       <h2>4. Review Extracted Locations</h2>
-      <p class="subtext">Edit rows before generating Texas811 wording. Add GPS start/end when known. Coordinates should be decimal degrees, for example: 33.086712, -96.918221.</p>
+      <p class="subtext">Click “Generate GPS Coordinates” after extracting locations. Review every row before submitting to Texas811.</p>
       <div id="locationsTable" class="empty">No locations extracted yet.</div>
       <div class="btn-row">
         <button onclick="addManualRow()">Add Manual Location</button>
         <button onclick="autoAssignZones()">Auto-Assign Zones</button>
+        <button onclick="generateCoordinatesForAll()">Generate GPS Coordinates</button>
         <button class="btn-secondary" onclick="downloadCsv()">Download CSV</button>
       </div>
     </section>
@@ -358,7 +297,6 @@
     <section class="grid grid-2">
       <div class="card">
         <h2>5. Generate Texas811 Locate Packet</h2>
-        <p class="subtext">Generate one zone at a time. This gives you the text to paste into Texas811 fields.</p>
         <label for="zoneSelect">Zone</label>
         <select id="zoneSelect"></select>
         <div class="btn-row">
@@ -432,64 +370,50 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
       document.getElementById('locateOutput').textContent = 'Locate wording will appear here.';
     }
 
-    function cleanLocationName(raw) {
-      return raw
-        .replace(/\(METHOD INJECTION ONLY\)/gi, '')
-        .replace(/\(DI INJECTION ONLY\)/gi, '')
-        .replace(/\s+/g, ' ')
-        .replace(/^[-\s]+/, '')
-        .replace(/acroos/gi, 'across')
-        .trim();
-    }
-
     function parseEstimate() {
       const text = document.getElementById('estimateText').value || '';
       const lines = text.split(/\n+/).map(line => line.trim()).filter(Boolean);
       const found = [];
 
       lines.forEach((line, index) => {
-        const isLocationLine = /Job Location/i.test(line);
-        if (!isLocationLine) return;
+        if (!/Job Location/i.test(line)) return;
 
         const methodType = /DI INJECTION ONLY|Deep Injection/i.test(line) ? 'DI' : 'Method';
         const afterLocation = line.split(/Job Location[-\s]*/i)[1] || line;
         const name = cleanLocationName(afterLocation);
         const context = [line, lines[index + 1] || '', lines[index + 2] || '', lines[index + 3] || ''].join(' ');
-        const dimensions = extractDimensions(context);
-        const settlements = extractSettlements(context);
-        const notes = extractNotes(context);
         const coords = extractCoordinates(context);
-
         const existing = found.find(item => normalize(item.location) === normalize(name));
+
         if (existing) {
           if (!existing.methodTypes.includes(methodType)) existing.methodTypes.push(methodType);
-          existing.dimensions = uniqueText(existing.dimensions, dimensions);
-          existing.settlement = uniqueText(existing.settlement, settlements);
-          existing.notes = uniqueText(existing.notes, notes);
+          existing.dimensions = uniqueText(existing.dimensions, extractDimensions(context));
+          existing.settlement = uniqueText(existing.settlement, extractSettlements(context));
+          existing.notes = uniqueText(existing.notes, extractNotes(context));
           if (!existing.gpsStart && coords[0]) existing.gpsStart = coords[0];
           if (!existing.gpsEnd && coords[1]) existing.gpsEnd = coords[1];
         } else {
+          const parsed = deriveStartEndFromLocation(name);
           found.push({
             id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + index),
             zone: '',
             location: name,
             county: document.getElementById('county').value,
             methodTypes: [methodType],
-            dimensions,
-            settlement: settlements,
-            notes,
+            dimensions: extractDimensions(context),
+            settlement: extractSettlements(context),
+            notes: extractNotes(context),
             nearestIntersection: guessIntersection(name),
-            laneArea: document.getElementById('defaultLane').value,
+            startPoint: parsed.start,
+            endPoint: parsed.end,
+            direction: inferDirectionFromText(name),
+            linearFeet: estimateLfFromDimensions(extractDimensions(context)),
+            locateWidth: '15 ft each side of work area',
+            sideOfRoad: /across/i.test(context) ? 'Across Street' : 'Both Sides',
             drivingDirections: '',
             gpsStart: coords[0] || '',
             gpsEnd: coords[1] || '',
             ticketNumber: '',
-            startPoint: '',
-            endPoint: '',
-            direction: '',
-            linearFeet: '',
-            locateWidth: '15 ft each side of work area',
-            sideOfRoad: 'Both Sides',
             status: 'Draft'
           });
         }
@@ -502,23 +426,33 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
       updateZoneSelect();
     }
 
+    function cleanLocationName(raw) {
+      return raw
+        .replace(/\(METHOD INJECTION ONLY\)/gi, '')
+        .replace(/\(DI INJECTION ONLY\)/gi, '')
+        .replace(/\s+/g, ' ')
+        .replace(/^[-\s]+/, '')
+        .replace(/acroos/gi, 'across')
+        .trim();
+    }
+
     function normalize(value) {
       return (value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     }
 
     function extractDimensions(text) {
-      const matches = text.match(/\b\d+\s*x\s*\d+'?|\b\d+'\s*x\s*\d+'?/gi) || [];
-      return [...new Set(matches.map(m => m.replace(/\s+/g, '').replace(/x/i, 'x')))].join(', ');
+      const m = text.match(/\b\d+\s*x\s*\d+'?|\b\d+'\s*x\s*\d+'?/gi) || [];
+      return [...new Set(m.map(x => x.replace(/\s+/g, '').replace(/x/i, 'x')))].join(', ');
     }
 
     function extractSettlements(text) {
-      const matches = text.match(/(?:settlement of\s*)?\d+\s*(?:\d\/\d)?\s*"(?:\s*to\s*\d+\s*(?:\d\/\d)?\s*")?/gi) || [];
-      return [...new Set(matches.map(m => m.replace(/settlement of\s*/i, '').trim()))].join(', ');
+      const m = text.match(/(?:settlement of\s*)?\d+\s*(?:\d\/\d)?\s*"(?:\s*to\s*\d+\s*(?:\d\/\d)?\s*")?/gi) || [];
+      return [...new Set(m.map(x => x.replace(/settlement of\s*/i, '').trim()))].join(', ');
     }
 
     function extractCoordinates(text) {
-      const matches = text.match(/-?\d{1,3}\.\d{4,}\s*,\s*-?\d{1,3}\.\d{4,}/g) || [];
-      return [...new Set(matches.map(m => m.replace(/\s+/g, '')))]
+      const m = text.match(/-?\d{1,3}\.\d{4,}\s*,\s*-?\d{1,3}\.\d{4,}/g) || [];
+      return [...new Set(m.map(x => x.replace(/\s+/g, '')))];
     }
 
     function extractNotes(text) {
@@ -542,6 +476,71 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
       return '';
     }
 
+    function deriveStartEndFromLocation(location) {
+      const city = document.getElementById('city').value || '';
+      const state = 'TX';
+      const text = location || '';
+
+      const rangeMatch = text.match(/(\d{3,6})\s*[-–]\s*(\d{3,6})\s+([A-Za-z ]+)/i);
+      if (rangeMatch) {
+        return {
+          start: `${rangeMatch[1]} ${rangeMatch[3].trim()}, ${city}, ${state}`,
+          end: `${rangeMatch[2]} ${rangeMatch[3].trim()}, ${city}, ${state}`
+        };
+      }
+
+      const throughMatch = text.match(/(\d{3,6})\s+([A-Za-z ]+)\s+through\s+(\d{3,6})\s+([A-Za-z ]+)/i);
+      if (throughMatch) {
+        return {
+          start: `${throughMatch[1]} ${throughMatch[2].trim()}, ${city}, ${state}`,
+          end: `${throughMatch[3]} ${throughMatch[4].trim()}, ${city}, ${state}`
+        };
+      }
+
+      const twoAddressMatch = text.match(/(\d{3,6})\s+([A-Za-z ]+).*?(\d{3,6})\s+([A-Za-z ]+)/i);
+      if (twoAddressMatch) {
+        return {
+          start: `${twoAddressMatch[1]} ${twoAddressMatch[2].trim()}, ${city}, ${state}`,
+          end: `${twoAddressMatch[3]} ${twoAddressMatch[4].trim()}, ${city}, ${state}`
+        };
+      }
+
+      const single = text.match(/(\d{3,6})\s+([A-Za-z ]+)/);
+      if (single) {
+        const addr = `${single[1]} ${single[2].trim()}, ${city}, ${state}`;
+        return { start: addr, end: addr };
+      }
+
+      const intersection = guessIntersection(text);
+      if (intersection) {
+        return {
+          start: `${intersection}, ${city}, ${state}`,
+          end: `${intersection}, ${city}, ${state}`
+        };
+      }
+
+      return {
+        start: text ? `${text}, ${city}, ${state}` : '',
+        end: text ? `${text}, ${city}, ${state}` : ''
+      };
+    }
+
+    function inferDirectionFromText(text) {
+      const lower = (text || '').toLowerCase();
+      if (lower.includes('east')) return 'eastbound / east along the listed roadway';
+      if (lower.includes('west')) return 'westbound / west along the listed roadway';
+      if (lower.includes('north')) return 'northbound / north along the listed roadway';
+      if (lower.includes('south')) return 'southbound / south along the listed roadway';
+      return '';
+    }
+
+    function estimateLfFromDimensions(dimensions) {
+      if (!dimensions) return '';
+      const matches = [...dimensions.matchAll(/(\d+)\s*x\s*(\d+)/gi)];
+      if (!matches.length) return '';
+      return String(matches.reduce((sum, match) => sum + Math.max(parseInt(match[1], 10), parseInt(match[2], 10)), 0));
+    }
+
     function uniqueText(existing, added) {
       const parts = [...(existing || '').split(', '), ...(added || '').split(', ')]
         .map(x => x.trim())
@@ -559,10 +558,45 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
         if (lower.includes('broughton') || lower.includes('telford') || lower.includes('kirkfield') || lower.includes('birmington')) zone = 'Zone D - Broughton / Kirkfield / Birmington';
         return { ...item, zone };
       });
+
       if (shouldRender) {
         renderLocations();
         renderSummary();
         updateZoneSelect();
+      }
+    }
+
+    async function generateCoordinatesForAll() {
+      const key = document.getElementById('googleApiKey').value.trim();
+      if (!key) return alert('Paste your Google Maps API key first.');
+
+      for (let i = 0; i < locations.length; i++) {
+        await generateCoordinatesForRow(i, key);
+      }
+
+      renderLocations();
+      renderSummary();
+      alert('GPS coordinate generation complete. Review start/end points before submitting.');
+    }
+
+    async function generateCoordinatesForRow(index, key) {
+      const item = locations[index];
+      if (!item.gpsStart && item.startPoint) locations[index].gpsStart = await geocodeAddress(item.startPoint, key);
+      if (!item.gpsEnd && item.endPoint) locations[index].gpsEnd = await geocodeAddress(item.endPoint, key);
+    }
+
+    async function geocodeAddress(address, key) {
+      try {
+        const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${encodeURIComponent(key)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.status && data.status !== 'OK') console.warn('Geocode status:', data.status, data.error_message || address);
+        if (!data.results || !data.results.length) return '';
+        const loc = data.results[0].geometry.location;
+        return `${loc.lat.toFixed(6)},${loc.lng.toFixed(6)}`;
+      } catch (err) {
+        console.error('Geocode failed', err);
+        return '';
       }
     }
 
@@ -575,18 +609,13 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
       }
 
       const zones = [...new Set(locations.map(x => x.zone || 'Unassigned'))];
-      const methodCount = locations.filter(x => x.methodTypes.includes('Method')).length;
-      const diCount = locations.filter(x => x.methodTypes.includes('DI')).length;
-      const gpsCount = locations.filter(x => x.gpsStart || x.gpsEnd).length;
-
       summary.className = '';
       summary.innerHTML = `
         <span class="pill">${locations.length} work locations</span>
         <span class="pill">${zones.length} locate zones</span>
-        <span class="pill">${methodCount} Method areas</span>
-        <span class="pill">${diCount} DI areas</span>
-        <span class="pill">${gpsCount} GPS-ready areas</span>
-        <div class="footer-note">Recommended next step: review county, intersection, driving directions, and GPS before copying into Texas811.</div>
+        <span class="pill">${locations.filter(x => x.gpsStart && x.gpsEnd).length} GPS complete</span>
+        <span class="pill">${locations.filter(x => x.methodTypes.includes('DI')).length} DI areas</span>
+        <div class="footer-note">Review every coordinate and limit before submitting to Texas811.</div>
       `;
     }
 
@@ -597,6 +626,7 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
         container.textContent = 'No locations extracted yet.';
         return;
       }
+
       container.className = 'scroll-wrap';
       container.innerHTML = `
         <table>
@@ -612,13 +642,12 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
               <th>Direction</th>
               <th>Approx. LF</th>
               <th>Locate Width</th>
-              <th>Side of Road</th>
+              <th>Side</th>
               <th>GPS Start</th>
               <th>GPS End</th>
               <th>Dimensions</th>
               <th>Settlement</th>
               <th>Notes</th>
-              <th>Driving Directions Override</th>
               <th>Status</th>
               <th></th>
             </tr>
@@ -631,19 +660,14 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
                 <td><input value="${escapeHtml(item.county)}" onchange="updateField(${index}, 'county', this.value)"></td>
                 <td><input value="${escapeHtml(item.nearestIntersection)}" onchange="updateField(${index}, 'nearestIntersection', this.value)"></td>
                 <td><input value="${escapeHtml(item.methodTypes.join(' + '))}" onchange="updateMethods(${index}, this.value)"></td>
-                <td><input placeholder="8341 Burnley Dr or GPS" value="${escapeHtml(item.startPoint || '')}" onchange="updateField(${index}, 'startPoint', this.value)"></td>
-                <td><input placeholder="8349 Burnley Dr or GPS" value="${escapeHtml(item.endPoint || '')}" onchange="updateField(${index}, 'endPoint', this.value)"></td>
-                <td><input placeholder="Eastbound / Northbound" value="${escapeHtml(item.direction || '')}" onchange="updateField(${index}, 'direction', this.value)"></td>
-                <td><input placeholder="220" value="${escapeHtml(item.linearFeet || '')}" onchange="updateField(${index}, 'linearFeet', this.value)"></td>
-                <td><input placeholder="15 ft each side" value="${escapeHtml(item.locateWidth || '')}" onchange="updateField(${index}, 'locateWidth', this.value)"></td>
+                <td><input value="${escapeHtml(item.startPoint)}" onchange="updateField(${index}, 'startPoint', this.value)"></td>
+                <td><input value="${escapeHtml(item.endPoint)}" onchange="updateField(${index}, 'endPoint', this.value)"></td>
+                <td><input placeholder="Eastbound" value="${escapeHtml(item.direction)}" onchange="updateField(${index}, 'direction', this.value)"></td>
+                <td><input value="${escapeHtml(item.linearFeet)}" onchange="updateField(${index}, 'linearFeet', this.value)"></td>
+                <td><input value="${escapeHtml(item.locateWidth)}" onchange="updateField(${index}, 'locateWidth', this.value)"></td>
                 <td>
                   <select onchange="updateField(${index}, 'sideOfRoad', this.value)">
-                    <option value="Both Sides" ${item.sideOfRoad === 'Both Sides' ? 'selected' : ''}>Both Sides</option>
-                    <option value="North Side" ${item.sideOfRoad === 'North Side' ? 'selected' : ''}>North Side</option>
-                    <option value="South Side" ${item.sideOfRoad === 'South Side' ? 'selected' : ''}>South Side</option>
-                    <option value="East Side" ${item.sideOfRoad === 'East Side' ? 'selected' : ''}>East Side</option>
-                    <option value="West Side" ${item.sideOfRoad === 'West Side' ? 'selected' : ''}>West Side</option>
-                    <option value="Across Street" ${item.sideOfRoad === 'Across Street' ? 'selected' : ''}>Across Street</option>
+                    ${['Both Sides','North Side','South Side','East Side','West Side','Across Street'].map(opt => `<option value="${opt}" ${item.sideOfRoad === opt ? 'selected' : ''}>${opt}</option>`).join('')}
                   </select>
                 </td>
                 <td><input placeholder="33.xxxxxx,-96.xxxxxx" value="${escapeHtml(item.gpsStart)}" onchange="updateField(${index}, 'gpsStart', this.value)"></td>
@@ -651,8 +675,7 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
                 <td><input value="${escapeHtml(item.dimensions)}" onchange="updateField(${index}, 'dimensions', this.value)"></td>
                 <td><input value="${escapeHtml(item.settlement)}" onchange="updateField(${index}, 'settlement', this.value)"></td>
                 <td><input value="${escapeHtml(item.notes)}" onchange="updateField(${index}, 'notes', this.value)"></td>
-                <td><textarea onchange="updateField(${index}, 'drivingDirections', this.value)">${escapeHtml(item.drivingDirections)}</textarea></td>
-                <td><span class="status">${escapeHtml(item.status)}</span></td>
+                <td><span class="status ${item.gpsStart && item.gpsEnd ? 'gps-ok' : ''}">${item.gpsStart && item.gpsEnd ? 'GPS Ready' : escapeHtml(item.status)}</span></td>
                 <td><button class="btn-danger" onclick="deleteRow(${index})">Remove</button></td>
               </tr>
             `).join('')}
@@ -699,18 +722,17 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
         dimensions: '',
         settlement: '',
         notes: '',
-        laneArea: document.getElementById('defaultLane').value,
         drivingDirections: '',
         gpsStart: '',
         gpsEnd: '',
         ticketNumber: '',
         startPoint: '',
-            endPoint: '',
-            direction: '',
-            linearFeet: '',
-            locateWidth: '15 ft each side of work area',
-            sideOfRoad: 'Both Sides',
-            status: 'Draft'
+        endPoint: '',
+        direction: '',
+        linearFeet: '',
+        locateWidth: '15 ft each side of work area',
+        sideOfRoad: 'Both Sides',
+        status: 'Draft'
       });
       renderLocations();
       renderSummary();
@@ -731,8 +753,7 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
 
     function generateAllZones() {
       const zones = [...new Set(locations.map(x => x.zone || 'Unassigned'))];
-      const output = zones.map(zone => buildLocateText(zone, locations.filter(x => (x.zone || 'Unassigned') === zone))).join('\n\n------------------------------------------------------------\n\n');
-      document.getElementById('locateOutput').textContent = output || 'No zones available.';
+      document.getElementById('locateOutput').textContent = zones.map(zone => buildLocateText(zone, locations.filter(x => (x.zone || 'Unassigned') === zone))).join('\n\n------------------------------------------------------------\n\n') || 'No zones available.';
     }
 
     function buildLocateText(zone, items) {
@@ -744,82 +765,36 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
       const natureOfWork = document.getElementById('natureOfWork').value || 'polyurethane concrete stabilization';
       const workDoneFor = document.getElementById('workDoneFor').value || '';
       const duration = document.getElementById('duration').value || '';
-      const explosives = document.getElementById('explosives').value || 'No';
-      const whiteLined = document.getElementById('whiteLined').value || 'No';
-      const directionalDrilling = document.getElementById('directionalDrilling').value || 'No';
-      const deeperThan16 = document.getElementById('deeperThan16').value || '';
-      const defaultLane = document.getElementById('defaultLane').value || 'roadway and adjacent sidewalk/right-of-way areas within the described work limits';
-      const startDate = document.getElementById('startDate').value;
+      const defaultLane = document.getElementById('defaultLane').value || '';
       const globalDirections = document.getElementById('globalDirections').value || '';
-
-      const streets = [...new Set(items.map(x => x.location).filter(Boolean))].join('; ');
-      const intersections = [...new Set(items.map(x => x.nearestIntersection).filter(Boolean))].join('; ');
-      const counties = [...new Set(items.map(x => x.county || county).filter(Boolean))].join('; ');
-
-      const locationLines = items.map((item, index) => {
-        const method = item.methodTypes.join(' + ');
-        const detailParts = [];
-        if (item.nearestIntersection) detailParts.push(`Nearest intersection: ${item.nearestIntersection}`);
-        if (item.dimensions) detailParts.push(`Approx. dimensions: ${item.dimensions}`);
-        if (item.settlement) detailParts.push(`Settlement: ${item.settlement}`);
-        if (item.gpsStart) detailParts.push(`GPS start: ${item.gpsStart}`);
-        if (item.gpsEnd) detailParts.push(`GPS end: ${item.gpsEnd}`);
-        if (item.notes) detailParts.push(`Notes: ${item.notes}`);
-        if (item.drivingDirections) detailParts.push(`Specific directions: ${item.drivingDirections}`);
-        return `${index + 1}. ${item.location} — ${method}${detailParts.length ? `\n   ${detailParts.join(' | ')}` : ''}`;
-      }).join('\n');
-
-      const gpsLines = items
-        .filter(item => item.gpsStart || item.gpsEnd)
-        .map(item => `${item.location}: ${item.gpsStart ? `Start ${item.gpsStart}` : ''}${item.gpsStart && item.gpsEnd ? ' / ' : ''}${item.gpsEnd ? `End ${item.gpsEnd}` : ''}`)
-        .join('\n');
+      const startDate = document.getElementById('startDate').value;
 
       const limitDefinitions = items.map((item, index) => {
-        const start = item.startPoint || item.gpsStart || 'DEFINE START POINT';
-        const end = item.endPoint || item.gpsEnd || 'DEFINE END POINT';
-        const direction = item.direction || 'DEFINE DIRECTION';
-        const lf = item.linearFeet || 'DEFINE LF';
+        const start = item.gpsStart ? `GPS ${item.gpsStart} near ${item.startPoint || item.location}` : `${item.startPoint || item.location} [GPS NEEDS REVIEW]`;
+        const end = item.gpsEnd ? `GPS ${item.gpsEnd} near ${item.endPoint || item.location}` : `${item.endPoint || item.location} [GPS NEEDS REVIEW]`;
+        const direction = item.direction || 'along the listed roadway';
+        const lf = item.linearFeet || estimateLfFromDimensions(item.dimensions) || 'field-measured distance';
         const width = item.locateWidth || '15 ft each side of work area';
         const side = item.sideOfRoad || 'Both Sides';
+        return `${index + 1}. BEGIN LOCATE at ${start}. Continue ${direction} approximately ${lf} LF to END LOCATE at ${end}. Locate width: ${width}. Side of roadway: ${side}.`;
+      }).join('\n');
 
-        return `${index + 1}. BEGIN LOCATE at ${start}. Continue ${direction} approximately ${lf} LF to ${end}. Locate width: ${width}. Side of roadway: ${side}.`;
-      }).join('
-');
+      const workLocations = items.map((item, index) => `${index + 1}. ${item.location} — ${item.methodTypes.join(' + ')}${item.dimensions ? ` | Dimensions: ${item.dimensions}` : ''}${item.settlement ? ` | Settlement: ${item.settlement}` : ''}${item.notes ? ` | Notes: ${item.notes}` : ''}`).join('\n');
+      const streets = [...new Set(items.map(x => x.location).filter(Boolean))].join('; ');
+      const intersections = [...new Set(items.map(x => x.nearestIntersection).filter(Boolean))].join('; ') || 'Review and enter nearest cross street/intersection before submitting.';
 
-      return `TEXAS811 LOCATE PACKET DRAFT\n\nPROJECT / TICKET BASICS\nProject: ${projectName}\nTicket Type: ${ticketType}\nCity: ${city}\nCounty: ${counties}\nReference / PO: ${poNumber}\nWork Done For: ${workDoneFor}\nLocate Zone: ${zone}\n${startDate ? `Planned Start Date: ${startDate}\n` : ''}Duration: ${duration}\n\nTEXAS811 SELECTIONS\nNature of Work: ${natureOfWork}\nExplosives: ${explosives}\nWhite Lined: ${whiteLined}\nDirectional Drilling: ${directionalDrilling}\nDeeper Than 16 Inches: ${deeperThan16}\n\nWORK SITE ADDRESS / STREET\n${streets}\n\nNEAREST INTERSECTION(S)\n${intersections || 'Review and enter nearest cross street/intersection before submitting.'}\n\nDRIVING DIRECTIONS\n${globalDirections}\n\nUse the listed street/intersection and GPS limits below to define the work area. Work is limited to the specific roadway panels, curb line, sidewalk, and right-of-way areas described in this locate zone.\n\nWORK SITE LOCATION INSTRUCTIONS
-Need all utilities located within the ${defaultLane}. Work limits are defined below using clear start and stop points. Locate from the BEGIN LOCATE point to the END LOCATE point for each listed area. Include roadway panels, curb line, sidewalk, and adjacent right-of-way within the listed locate width.\n\nADDITIONAL INFORMATION\nKKE Concrete Lifting will be performing polyurethane concrete lifting, leveling, and stabilization. Work includes drilling 5/8-inch holes through existing concrete roadway and/or sidewalk panels and injecting high-density polyurethane foam beneath the slab. Deep injection areas may include tubing to approximately 4 feet below the concrete to stabilize weak subgrade soils. This is spot repair / slab stabilization, not open trench excavation.\n\nCLEAR START / STOP LIMITS
-${limitDefinitions}
-
-WORK LOCATIONS INCLUDED
-${locationLines}\n\nGPS COORDINATES\n${gpsLines || 'No GPS coordinates entered. Add start/end GPS coordinates when available or define the area using the Texas811 map.'}\n\nLOCATOR NOTES\n- Please mark all public and private utilities within and immediately adjacent to the work limits.\n- Include roadway panels, curb line, sidewalk areas, parkway/right-of-way areas, and any area that may be affected by drilling or polyurethane injection.\n- If limits are unclear, contact KKE before marking incomplete areas.\n- Do not mark only the intersection if the work area extends along the street or across the roadway.`;
+      return `TEXAS811 LOCATE PACKET DRAFT\n\nPROJECT / TICKET BASICS\nProject: ${projectName}\nTicket Type: ${ticketType}\nCity: ${city}\nCounty: ${county}\nReference / PO: ${poNumber}\nWork Done For: ${workDoneFor}\nLocate Zone: ${zone}\n${startDate ? `Planned Start Date: ${startDate}\n` : ''}Duration: ${duration}\n\nTEXAS811 SELECTIONS\nNature of Work: ${natureOfWork}\nExplosives: ${document.getElementById('explosives').value}\nWhite Lined: ${document.getElementById('whiteLined').value}\nDirectional Drilling: ${document.getElementById('directionalDrilling').value}\nDeeper Than 16 Inches: ${document.getElementById('deeperThan16').value}\n\nWORK SITE ADDRESS / STREET\n${streets}\n\nNEAREST INTERSECTION(S)\n${intersections}\n\nDRIVING DIRECTIONS\n${globalDirections}\n\nWORK SITE LOCATION INSTRUCTIONS\nNeed all utilities located within the ${defaultLane}. Work limits are defined by the clear BEGIN LOCATE and END LOCATE points below. Locate the full route between the start and stop points, including roadway panels, curb line, sidewalk, and adjacent right-of-way within the listed locate width.\n\nCLEAR START / STOP LIMITS\n${limitDefinitions}\n\nADDITIONAL INFORMATION\nKKE Concrete Lifting will be performing polyurethane concrete lifting, leveling, and stabilization. Work includes drilling 5/8-inch holes through existing concrete roadway and/or sidewalk panels and injecting high-density polyurethane foam beneath the slab. Deep injection areas may include tubing to approximately 4 feet below the concrete to stabilize weak subgrade soils. This is spot repair / slab stabilization, not open trench excavation.\n\nWORK LOCATIONS INCLUDED\n${workLocations}\n\nLOCATOR NOTES\n- Please mark all public and private utilities within and immediately adjacent to the work limits.\n- Include roadway panels, curb line, sidewalk areas, parkway/right-of-way areas, and any area that may be affected by drilling or polyurethane injection.\n- Include both sides of the roadway where the work notes say across street or across roadway.\n- If limits are unclear, contact KKE before marking incomplete areas.\n- Do not mark only the intersection if the work area extends along the street or across the roadway.`;
     }
 
     function copyLocateText() {
       const text = document.getElementById('locateOutput').textContent;
-      navigator.clipboard.writeText(text).then(() => {
-        alert('Locate packet copied.');
-      }).catch(() => {
-        alert('Copy failed. You can manually select and copy the text.');
-      });
+      navigator.clipboard.writeText(text).then(() => alert('Locate packet copied.')).catch(() => alert('Copy failed. Manually select and copy the text.'));
     }
 
     function downloadCsv() {
       if (!locations.length) return alert('No locations to download.');
-      const headers = ['Zone', 'Location', 'County', 'Nearest Intersection', 'Method Types', 'GPS Start', 'GPS End', 'Dimensions', 'Settlement', 'Notes', 'Driving Directions', 'Status'];
-      const rows = locations.map(item => [
-        item.zone,
-        item.location,
-        item.county,
-        item.nearestIntersection,
-        item.methodTypes.join(' + '),
-        item.gpsStart,
-        item.gpsEnd,
-        item.dimensions,
-        item.settlement,
-        item.notes,
-        item.drivingDirections,
-        item.status
-      ]);
+      const headers = ['Zone','Location','County','Intersection','Method','Start Point','End Point','Direction','Approx LF','Locate Width','Side','GPS Start','GPS End','Dimensions','Settlement','Notes','Status'];
+      const rows = locations.map(i => [i.zone,i.location,i.county,i.nearestIntersection,i.methodTypes.join(' + '),i.startPoint,i.endPoint,i.direction,i.linearFeet,i.locateWidth,i.sideOfRoad,i.gpsStart,i.gpsEnd,i.dimensions,i.settlement,i.notes,i.status]);
       const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell || '').replace(/"/g, '""')}"`).join(',')).join('\n');
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
