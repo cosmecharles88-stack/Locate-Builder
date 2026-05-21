@@ -289,6 +289,33 @@ function escapeHtml(value){
     .replace(/'/g,'&#039;');
 }
 
+
+function isSingleAddressLocate(item){
+  const location = String(item.location || '');
+  const start = String(item.startPoint || '');
+  const end = String(item.endPoint || '');
+
+  if(!isAddressLike(location) && !isAddressLike(start)) return false;
+  if(start && end && normalize(start) !== normalize(end)) return false;
+
+  return true;
+}
+
+function hasDifferentStartEndGps(item){
+  const start = parseLatLng(item.gpsStart || '');
+  const end = parseLatLng(item.gpsEnd || '');
+
+  if(!start || !end) return false;
+
+  const feet = distanceFeet(item.gpsStart,item.gpsEnd);
+  return feet && feet > 10;
+}
+
+function needsPropertyEndpointReview(item){
+  return isSingleAddressLocate(item) && !hasDifferentStartEndGps(item);
+}
+
+
 function normalize(value){
   return String(value || '').toLowerCase().replace(/[^a-z0-9]/g,'');
 }
@@ -1129,6 +1156,12 @@ async function generateCoordinatesForAll(){
       item.gpsEnd = await geocodeAddress(item.endPoint,geocoder);
     }
 
+    // A normal address geocode returns one point, not the start/end of property frontage.
+    // For single-address locates, require a true manually reviewed END GPS point.
+    if(isSingleAddressLocate(item) && item.gpsStart && item.gpsEnd && normalize(item.gpsStart)===normalize(item.gpsEnd)){
+      item.gpsEnd='';
+    }
+
     if(item.gpsStart && shouldAutoFindIntersection(item)){
       const autoIntersection = await reverseGeocodeForNearestIntersection(item.gpsStart,geocoder);
 
@@ -1251,7 +1284,7 @@ function renderLocations(){
             </td>
             <td><input value="${escapeHtml(item.gpsStart)}" onchange="updateField(${index},'gpsStart',this.value)"></td>
             <td><input value="${escapeHtml(item.gpsEnd)}" onchange="updateField(${index},'gpsEnd',this.value)"></td>
-            <td><span class="status ${item.gpsStart && item.gpsEnd ? 'gps-ok' : ''}">${item.gpsStart && item.gpsEnd ? 'GPS Ready' : 'Draft'}</span></td>
+            <td><span class="status ${item.gpsStart && item.gpsEnd && !needsPropertyEndpointReview(item) ? 'gps-ok' : ''}">${needsPropertyEndpointReview(item)?'Needs 2 GPS Points':(item.gpsStart && item.gpsEnd ? 'GPS Ready' : 'Draft')}</span></td>
             <td><button class="btn-danger" onclick="deleteRow(${index})">Remove</button></td>
           </tr>
         `).join('')}
@@ -1488,10 +1521,6 @@ function buildLocateText(zone,items){
       intersection = 'Nearest intersection needs review';
     }
 
-    const buffered = bufferedGps(item.gpsStart,item.gpsEnd,bufferFeet);
-    const startGps = item.gpsStart ? buffered.start : '';
-    const endGps = item.gpsEnd ? buffered.end : '';
-
     const side = item.sideOfRoad || 'Both Sides';
 
     let instruction = 'Need all utilities located at ' + workArea + ' across roadway panels, curb line, sidewalk, and adjacent right-of-way areas.';
@@ -1504,10 +1533,21 @@ function buildLocateText(zone,items){
 
     let gpsText = 'GPS needs review.';
 
-    if(startGps && endGps && startGps !== endGps){
-      gpsText = 'START GPS: ' + startGps + '\nEND GPS: ' + endGps;
-    }else if(startGps){
-      gpsText = 'GPS POINT: ' + startGps;
+    if(needsPropertyEndpointReview(item)){
+      gpsText =
+        'START GPS: NEEDS PROPERTY FRONTAGE START POINT\n' +
+        'END GPS: NEEDS PROPERTY FRONTAGE END POINT\n' +
+        'NOTE: Address locates require two GPS endpoints: one at the start of the property/work frontage and one at the end. Enter both endpoints, then regenerate.';
+    }else{
+      const buffered = bufferedGps(item.gpsStart,item.gpsEnd,bufferFeet);
+      const startGps = item.gpsStart ? buffered.start : '';
+      const endGps = item.gpsEnd ? buffered.end : '';
+
+      if(startGps && endGps && startGps !== endGps){
+        gpsText = 'START GPS: ' + startGps + '\nEND GPS: ' + endGps;
+      }else if(startGps){
+        gpsText = 'GPS POINT: ' + startGps;
+      }
     }
 
     return (
