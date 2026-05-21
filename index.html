@@ -290,6 +290,79 @@ function escapeHtml(value){
 }
 
 
+
+function isIntersectionLocate(item){
+  const location = String(item.location || '');
+  const intersection = String(item.nearestIntersection || '');
+  const combined = (location + ' ' + intersection).toLowerCase();
+
+  if(combined.includes('&')) return true;
+  if(combined.includes(' at ')) return true;
+
+  return false;
+}
+
+function getIntersectionStreetNames(item){
+  let source = normalizeIntersectionForUse(item.nearestIntersection || '') || item.location || '';
+
+  source = String(source || '')
+    .replace(/\s+at\s+/gi,' & ')
+    .replace(/\s+and\s+/gi,' & ')
+    .replace(/\s+/g,' ')
+    .trim();
+
+  if(!source.includes('&')){
+    return [];
+  }
+
+  return source
+    .split('&')
+    .map(function(part){ return part.trim(); })
+    .filter(Boolean)
+    .slice(0,2);
+}
+
+function buildIntersectionLocateInstructions(item,centerGps){
+  const streets = getIntersectionStreetNames(item);
+  const distance = 100;
+
+  if(streets.length >= 2){
+    return (
+      'Need all utilities located at the intersection of ' + streets[0] + ' and ' + streets[1] + '. ' +
+      'Locate ' + streets[0] + ' for approximately ' + distance + ' ft north and ' + distance + ' ft south from the center of the intersection. ' +
+      'Locate ' + streets[1] + ' for approximately ' + distance + ' ft east and ' + distance + ' ft west from the center of the intersection. ' +
+      'Also locate roadway panels, curb line, sidewalk, and adjacent right-of-way within those limits. ' +
+      'We will be injecting polyurethane foam beneath the roadway to level and stabilize concrete.'
+    );
+  }
+
+  return (
+    'Need all utilities located at the listed intersection. ' +
+    'Locate approximately ' + distance + ' ft in each direction from the center GPS point. ' +
+    'Also locate roadway panels, curb line, sidewalk, and adjacent right-of-way within those limits. ' +
+    'We will be injecting polyurethane foam beneath the roadway to level and stabilize concrete.'
+  );
+}
+
+function buildIntersectionGpsText(item,centerGps){
+  const streets = getIntersectionStreetNames(item);
+  const distance = 100;
+
+  if(streets.length >= 2){
+    return (
+      'CENTER GPS: ' + centerGps + '\n' +
+      'LOCATE LIMITS: ' + distance + ' ft north and ' + distance + ' ft south on ' + streets[0] + '. ' +
+      distance + ' ft east and ' + distance + ' ft west on ' + streets[1] + '.'
+    );
+  }
+
+  return (
+    'CENTER GPS: ' + centerGps + '\n' +
+    'LOCATE LIMITS: ' + distance + ' ft in every direction from the center of the intersection.'
+  );
+}
+
+
 function isSingleAddressLocate(item){
   const location = String(item.location || '');
   const start = String(item.startPoint || '');
@@ -1156,9 +1229,15 @@ async function generateCoordinatesForAll(){
       item.gpsEnd = await geocodeAddress(item.endPoint,geocoder);
     }
 
+    // Intersection locates use one center GPS point and 100 ft in each direction.
+    // Do not require a second endpoint for an intersection locate.
+    if(isIntersectionLocate(item) && item.gpsStart){
+      item.gpsEnd='';
+    }
+
     // A normal address geocode returns one point, not the start/end of property frontage.
     // For single-address locates, require a true manually reviewed END GPS point.
-    if(isSingleAddressLocate(item) && item.gpsStart && item.gpsEnd && normalize(item.gpsStart)===normalize(item.gpsEnd)){
+    if(!isIntersectionLocate(item) && isSingleAddressLocate(item) && item.gpsStart && item.gpsEnd && normalize(item.gpsStart)===normalize(item.gpsEnd)){
       item.gpsEnd='';
     }
 
@@ -1284,7 +1363,7 @@ function renderLocations(){
             </td>
             <td><input value="${escapeHtml(item.gpsStart)}" onchange="updateField(${index},'gpsStart',this.value)"></td>
             <td><input value="${escapeHtml(item.gpsEnd)}" onchange="updateField(${index},'gpsEnd',this.value)"></td>
-            <td><span class="status ${item.gpsStart && item.gpsEnd && !needsPropertyEndpointReview(item) ? 'gps-ok' : ''}">${needsPropertyEndpointReview(item)?'Needs 2 GPS Points':(item.gpsStart && item.gpsEnd ? 'GPS Ready' : 'Draft')}</span></td>
+            <td><span class="status ${(isIntersectionLocate(item)&&item.gpsStart)||(item.gpsStart && item.gpsEnd && !needsPropertyEndpointReview(item)) ? 'gps-ok' : ''}">${isIntersectionLocate(item)&&item.gpsStart?'Intersection GPS Ready':(needsPropertyEndpointReview(item)?'Needs 2 GPS Points':(item.gpsStart && item.gpsEnd ? 'GPS Ready' : 'Draft'))}</span></td>
             <td><button class="btn-danger" onclick="deleteRow(${index})">Remove</button></td>
           </tr>
         `).join('')}
@@ -1517,36 +1596,54 @@ function buildLocateText(zone,items){
     const workArea = formatWorkAreaName(item) || item.location || 'Work area needs review';
 
     let intersection = normalizeIntersectionForUse(item.nearestIntersection || '');
+    if(!intersection && isIntersectionLocate(item)){
+      intersection = normalizeIntersectionForUse(item.location || '');
+    }
     if(!intersection){
       intersection = 'Nearest intersection needs review';
     }
 
     const side = item.sideOfRoad || 'Both Sides';
 
-    let instruction = 'Need all utilities located at ' + workArea + ' across roadway panels, curb line, sidewalk, and adjacent right-of-way areas.';
-
-    if(side === 'Across Street'){
-      instruction = 'Need all utilities located at ' + workArea + ' across both sides of roadway panels, curb line, sidewalk, and adjacent right-of-way areas.';
-    }
-
-    instruction += ' We will be injecting polyurethane foam beneath the roadway to level and stabilize concrete.';
-
+    let instruction = '';
     let gpsText = 'GPS needs review.';
 
-    if(needsPropertyEndpointReview(item)){
-      gpsText =
-        'START GPS: NEEDS PROPERTY FRONTAGE START POINT\n' +
-        'END GPS: NEEDS PROPERTY FRONTAGE END POINT\n' +
-        'NOTE: Address locates require two GPS endpoints: one at the start of the property/work frontage and one at the end. Enter both endpoints, then regenerate.';
-    }else{
-      const buffered = bufferedGps(item.gpsStart,item.gpsEnd,bufferFeet);
-      const startGps = item.gpsStart ? buffered.start : '';
-      const endGps = item.gpsEnd ? buffered.end : '';
+    if(isIntersectionLocate(item)){
+      const centerGps = item.gpsStart || '';
 
-      if(startGps && endGps && startGps !== endGps){
-        gpsText = 'START GPS: ' + startGps + '\nEND GPS: ' + endGps;
-      }else if(startGps){
-        gpsText = 'GPS POINT: ' + startGps;
+      instruction = buildIntersectionLocateInstructions(item,centerGps || 'CENTER GPS NEEDS REVIEW');
+
+      if(centerGps){
+        gpsText = buildIntersectionGpsText(item,centerGps);
+      }else{
+        gpsText =
+          'CENTER GPS: NEEDS REVIEW\n' +
+          'NOTE: Intersection locates require one GPS point placed in the center of the intersection. Locate 100 ft in each direction from that center point.';
+      }
+    }else{
+      instruction = 'Need all utilities located at ' + workArea + ' across roadway panels, curb line, sidewalk, and adjacent right-of-way areas.';
+
+      if(side === 'Across Street'){
+        instruction = 'Need all utilities located at ' + workArea + ' across both sides of roadway panels, curb line, sidewalk, and adjacent right-of-way areas.';
+      }
+
+      instruction += ' We will be injecting polyurethane foam beneath the roadway to level and stabilize concrete.';
+
+      if(needsPropertyEndpointReview(item)){
+        gpsText =
+          'START GPS: NEEDS PROPERTY FRONTAGE START POINT\n' +
+          'END GPS: NEEDS PROPERTY FRONTAGE END POINT\n' +
+          'NOTE: Address locates require two GPS endpoints: one at the start of the property/work frontage and one at the end. Enter both endpoints, then regenerate.';
+      }else{
+        const buffered = bufferedGps(item.gpsStart,item.gpsEnd,bufferFeet);
+        const startGps = item.gpsStart ? buffered.start : '';
+        const endGps = item.gpsEnd ? buffered.end : '';
+
+        if(startGps && endGps && startGps !== endGps){
+          gpsText = 'START GPS: ' + startGps + '\nEND GPS: ' + endGps;
+        }else if(startGps){
+          gpsText = 'GPS POINT: ' + startGps;
+        }
       }
     }
 
@@ -1559,7 +1656,7 @@ function buildLocateText(zone,items){
       instruction + '\n\n' +
       'SUPPORTING GPS\n' +
       gpsText + '\n' +
-      bufferFeet + ' ft locate buffer included before and after work limits.'
+      (isIntersectionLocate(item) ? 'Intersection locate uses 100 ft limits in each direction from center GPS.' : bufferFeet + ' ft locate buffer included before and after work limits.')
     );
   }).join('\n\n--------------------------------\n\n');
 
