@@ -397,7 +397,10 @@ function parseEstimate(){
 
     const context=entry.fullText;
     const coords=extractCoordinates(context);
-    const existing=found.find(function(x){return normalize(x.location)===normalize(name);});
+
+    const existing=found.find(function(x){
+      return normalize(x.location)===normalize(name);
+    });
 
     if(existing){
       if(!existing.methodTypes.includes(method))existing.methodTypes.push(method);
@@ -409,6 +412,7 @@ function parseEstimate(){
     }
 
     const parsed=deriveStartEndFromLocation(name);
+
     found.push({
       id:Date.now()+''+index,
       zone:'',
@@ -430,16 +434,18 @@ function parseEstimate(){
     });
   });
 
-  locations=found;
+  locations=mergeContinuousLocations(found);
+
   autoAssignZones(false);
   renderLocations();
   renderSummary();
   updateZoneSelect();
   window.generatedLocateText='';
+
   if(typeof updateLocatePreview==='function')updateLocatePreview();
 
   if(locations.length){
-    setCopyStatus(`Extracted ${locations.length} work location(s). Generate GPS next.`);
+    setCopyStatus(`Extracted ${locations.length} locate area(s). Generate GPS next.`);
   }else{
     setCopyStatus('No work locations found. Check that the estimate contains Job Location lines.');
   }
@@ -484,6 +490,60 @@ function splitEstimateIntoLocationEntries(text){
   return entries;
 }
 function uniqueText(a,b){return[...(a||'').split(', '),...(b||'').split(', ')].map(x=>x.trim()).filter(Boolean).filter((v,i,arr)=>arr.indexOf(v)===i).join(', ')}
+function mergeContinuousLocations(items){
+  const merged=[];
+
+  items.forEach(function(item){
+    const existing=merged.find(function(m){
+      return shouldMergeLocations(m,item);
+    });
+
+    if(existing){
+      existing.dimensions=uniqueText(existing.dimensions,item.dimensions);
+      existing.notes=uniqueText(existing.notes,item.notes);
+
+      existing.linearFeet=String(
+        (parseInt(existing.linearFeet||'0',10)||0)+
+        (parseInt(item.linearFeet||'0',10)||0)
+      );
+
+      if(!existing.gpsStart&&item.gpsStart)existing.gpsStart=item.gpsStart;
+      if(!existing.gpsEnd&&item.gpsEnd)existing.gpsEnd=item.gpsEnd;
+
+      existing.location=buildMergedLocationName(existing.location,item.location);
+
+      return;
+    }
+
+    merged.push({...item});
+  });
+
+  return merged;
+}
+
+function shouldMergeLocations(a,b){
+  const aLoc=String(a.location||'').toLowerCase();
+  const bLoc=String(b.location||'').toLowerCase();
+
+  const streets=['wakefield','darcy','burnley','prescott','wembley','birmington','kirkfield','bonny bank','lindsay'];
+
+  const aStreet=streets.find(s=>aLoc.includes(s));
+  const bStreet=streets.find(s=>bLoc.includes(s));
+
+  if(!aStreet||!bStreet)return false;
+  if(aStreet!==bStreet)return false;
+
+  return true;
+}
+
+function buildMergedLocationName(a,b){
+  if(!a)return b;
+  if(!b)return a;
+  if(normalize(a)===normalize(b))return a;
+
+  return a+' / '+b;
+}
+
 function guessIntersection(loc){
   const clean=simplifyIntersectionText(cleanLocationName(loc));
   const l=String(clean||'').toLowerCase();
