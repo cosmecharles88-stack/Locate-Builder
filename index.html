@@ -826,6 +826,49 @@ function isUsableIntersection(value){
   return text.includes('&') || text.includes(' and ') || text.includes(' at ');
 }
 
+function hasAddressRange(value){
+  return /\b\d{3,6}\s*[-–]\s*\d{3,6}\b/.test(String(value || ''));
+}
+
+function looksLikeStreetAddressOnly(value){
+  const text = String(value || '').trim().toLowerCase();
+
+  if(!text) return false;
+  if(hasAddressRange(text)) return true;
+
+  // A single address like "2920 Prescott" is useful as a work area,
+  // but it is not acceptable as a nearest intersection / drive-from point.
+  if(/^\d{3,6}\s+[a-z0-9 .'-]+$/.test(text) && !text.includes('&') && !text.includes(' at ')){
+    return true;
+  }
+
+  return false;
+}
+
+function normalizeIntersectionForUse(value){
+  let text = simplifyIntersectionText(value);
+
+  if(!text) return '';
+  if(looksLikeStreetAddressOnly(text)) return '';
+  if(!isUsableIntersection(text)) return '';
+
+  text = text.replace(/\s+and\s+/gi,' & ');
+  text = text.replace(/\s+at\s+/gi,' & ');
+  text = text.replace(/\s*&\s*/g,' & ');
+  text = text.replace(/\s+/g,' ').trim();
+
+  return text;
+}
+
+function isReasonableRouteDistance(feet){
+  const n = parseInt(feet,10);
+  if(!n) return false;
+  // For this app, "nearest intersection to begin locate" should not be miles away.
+  // Anything above 5,000 ft is almost certainly a bad geocode or bad intersection.
+  return n > 25 && n <= 5000;
+}
+
+
 function getRouteStreetNameFromReverseResults(results){
   if(!results || !results.length) return '';
 
@@ -887,11 +930,12 @@ function reverseGeocodeForNearestIntersection(latLngText,geocoder){
 }
 
 function shouldAutoFindIntersection(item){
-  const current = String(item.nearestIntersection || '').trim().toLowerCase();
+  const current = String(item.nearestIntersection || '').trim();
 
   if(!current) return true;
-  if(current === 'nearest intersection') return true;
-  if(current.includes('needs review')) return true;
+  if(current.toLowerCase() === 'nearest intersection') return true;
+  if(current.toLowerCase().includes('needs review')) return true;
+  if(!normalizeIntersectionForUse(current)) return true;
 
   return false;
 }
@@ -899,12 +943,16 @@ function shouldAutoFindIntersection(item){
 
 
 function buildFallbackRouteDirections(item){
-  const fromName = simplifyIntersectionText(item.driveFrom || item.nearestIntersection || 'nearest intersection');
+  const fromName = normalizeIntersectionForUse(item.driveFrom || item.nearestIntersection || '');
   const beginGps = item.gpsStart || '';
   const fromGps = item.driveFromGps || '';
 
   if(!beginGps){
-    return 'Route directions need review. BEGIN LOCATE GPS is missing.';
+    return 'ROUTE NEEDS REVIEW: BEGIN LOCATE GPS is missing.';
+  }
+
+  if(!fromName){
+    return 'ROUTE NEEDS REVIEW: Enter a valid nearest intersection, then regenerate route directions. BEGIN LOCATE is GPS ' + beginGps + '.';
   }
 
   const fromPoint = parseLatLng(fromGps);
@@ -912,15 +960,17 @@ function buildFallbackRouteDirections(item){
 
   if(fromPoint && beginPoint){
     const feet = distanceFeet(fromGps,beginGps);
-    const bearing = bearingDegrees(fromPoint,beginPoint);
-    const direction = cardinalFromBearing(bearing);
 
-    if(feet && feet > 25){
+    if(isReasonableRouteDistance(feet)){
+      const bearing = bearingDegrees(fromPoint,beginPoint);
+      const direction = cardinalFromBearing(bearing);
       return 'From ' + fromName + ', travel approximately ' + feet + ' ft ' + direction + ' to BEGIN LOCATE at GPS ' + beginGps + '.';
     }
+
+    return 'ROUTE NEEDS REVIEW: The calculated distance from ' + fromName + ' to BEGIN LOCATE is not reasonable. Verify nearest intersection and GPS before submitting.';
   }
 
-  return 'At or near ' + fromName + ', proceed to BEGIN LOCATE at GPS ' + beginGps + '.';
+  return 'ROUTE NEEDS REVIEW: Could not geocode nearest intersection. Verify Drive From / Drive From GPS before submitting.';
 }
 
 
@@ -1036,9 +1086,13 @@ async function generateCoordinatesForAll(){
     if(item.gpsStart && shouldAutoFindIntersection(item)){
       const autoIntersection = await reverseGeocodeForNearestIntersection(item.gpsStart,geocoder);
 
-      if(autoIntersection){
-        item.nearestIntersection = simplifyIntersectionText(autoIntersection);
-        item.driveFrom = simplifyIntersectionText(autoIntersection);
+      const cleanedIntersection = normalizeIntersectionForUse(autoIntersection);
+      if(cleanedIntersection){
+        item.nearestIntersection = cleanedIntersection;
+        item.driveFrom = cleanedIntersection;
+      }else if(looksLikeStreetAddressOnly(item.nearestIntersection)){
+        item.nearestIntersection = '';
+        item.driveFrom = '';
       }
     }
 
@@ -1054,15 +1108,17 @@ async function generateCoordinatesForAll(){
     if(item.driveFromGps && item.gpsStart){
       const calculatedToBegin = distanceFeet(item.driveFromGps,item.gpsStart);
 
-      if(calculatedToBegin && calculatedToBegin > 25){
+      if(isReasonableRouteDistance(calculatedToBegin)){
         item.distanceToBeginFeet = String(calculatedToBegin);
-      }else if(!item.distanceToBeginFeet){
+      }else{
         item.distanceToBeginFeet = '';
       }
 
-      if(!item.routeDirections){
+      if(!normalizeIntersectionForUse(item.driveFrom || item.nearestIntersection)){
+        item.routeDirections = buildFallbackRouteDirections(item);
+      }else if(!item.routeDirections){
         let googleRouteText='';
-        if(calculatedToBegin && calculatedToBegin > 25){
+        if(isReasonableRouteDistance(calculatedToBegin)){
           googleRouteText = await getRouteDirectionsFromGoogle(item.driveFromGps,item.gpsStart,key);
         }
         item.routeDirections = googleRouteText || buildFallbackRouteDirections(item);
@@ -1225,55 +1281,26 @@ function stripCityState(value){
 
 
 function buildIntersectionToBeginDirections(item,bufferedStart){
-  const fromName = item.driveFrom || item.nearestIntersection || '';
+  const fromName = normalizeIntersectionForUse(item.driveFrom || item.nearestIntersection || '');
   const beginGps = bufferedStart || item.gpsStart || '';
-  const fromGps = item.driveFromGps || '';
 
-  if(item.routeDirections){
+  if(item.routeDirections && !item.routeDirections.includes('473') && !item.routeDirections.includes('242202') && !item.routeDirections.includes('249602')){
     return item.routeDirections;
   }
 
   if(!beginGps){
-    if(fromName){
-      return `From ${fromName}, proceed to the described work area. BEGIN LOCATE GPS needs review.`;
-    }
-    return `Proceed to the described work area. BEGIN LOCATE GPS needs review.`;
+    return 'ROUTE NEEDS REVIEW: BEGIN LOCATE GPS is missing.';
   }
 
-  if(!fromName || fromName.toLowerCase()==='nearest intersection'){
-    return `BEGIN LOCATE at GPS ${beginGps}.`;
+  if(!fromName){
+    return 'ROUTE NEEDS REVIEW: Enter a valid nearest intersection, then regenerate route directions. BEGIN LOCATE is GPS ' + beginGps + '.';
   }
 
-  let distanceToBegin = '';
-  let directionToBegin = '';
-
-  const fromPoint = parseLatLng(fromGps);
-  const beginPoint = parseLatLng(beginGps);
-
-  if(fromPoint && beginPoint){
-    const calculatedDistance = distanceFeet(fromGps,beginGps);
-    if(calculatedDistance && calculatedDistance > 25){
-      distanceToBegin = String(calculatedDistance);
-      directionToBegin = cardinalFromBearing(bearingDegrees(fromPoint,beginPoint));
-    }
-  }
-
-  if(!distanceToBegin && item.distanceToBeginFeet){
-    const manualDistance = parseInt(item.distanceToBeginFeet,10);
-    if(manualDistance > 25){
-      distanceToBegin = String(manualDistance);
-    }
-  }
-
-  if(distanceToBegin && directionToBegin){
-    return `From ${fromName}, travel approximately ${distanceToBegin} ft ${directionToBegin} to BEGIN LOCATE at GPS ${beginGps}.`;
-  }
-
-  if(distanceToBegin){
-    return `From ${fromName}, travel approximately ${distanceToBegin} ft to BEGIN LOCATE at GPS ${beginGps}.`;
-  }
-
-  return `At or near ${fromName}, BEGIN LOCATE at GPS ${beginGps}.`;
+  return buildFallbackRouteDirections({
+    ...item,
+    driveFrom:fromName,
+    gpsStart:beginGps
+  });
 }
 
 function buildBeginToEndDirections(item,bufferedStart,bufferedEnd){
@@ -1314,7 +1341,7 @@ function buildLocateText(zone,items){
   const bufferFeet = parseInt(val('locateBuffer') || '20',10) || 0;
 
   const workAreas = [...new Set(items.map(formatWorkAreaName).filter(Boolean))].join('; ');
-  const intersections = [...new Set(items.map(item => item.nearestIntersection).filter(Boolean))].join('; ') || 'Nearest intersection needs review.';
+  const intersections = [...new Set(items.map(item => normalizeIntersectionForUse(item.nearestIntersection)).filter(Boolean))].join('; ') || 'Nearest intersection needs review.';
 
   const lines = items.map((item,index) => {
     const buffered = bufferedGps(item.gpsStart,item.gpsEnd,bufferFeet);
@@ -1515,9 +1542,13 @@ async function autoFindIntersectionsForAll(){
     if(item.gpsStart && shouldAutoFindIntersection(item)){
       const autoIntersection = await reverseGeocodeForNearestIntersection(item.gpsStart,geocoder);
 
-      if(autoIntersection){
-        item.nearestIntersection = simplifyIntersectionText(autoIntersection);
-        item.driveFrom = simplifyIntersectionText(autoIntersection);
+      const cleanedIntersection = normalizeIntersectionForUse(autoIntersection);
+      if(cleanedIntersection){
+        item.nearestIntersection = cleanedIntersection;
+        item.driveFrom = cleanedIntersection;
+      }else if(looksLikeStreetAddressOnly(item.nearestIntersection)){
+        item.nearestIntersection = '';
+        item.driveFrom = '';
       }
     }
 
@@ -1629,6 +1660,7 @@ function runAppCheck(){
   results.push(typeof reverseGeocodeForNearestIntersection === 'function' ? '✅ Nearest intersection helper loaded' : '❌ Nearest intersection helper missing');
   results.push(typeof buildFallbackRouteDirections === 'function' ? '✅ Route fallback helper loaded' : '❌ Route fallback helper missing');
   results.push(simplifyIntersectionText('Broughton & Telford; 3408-3568 Kirkfield Ct, The Colony, TX 75056') === 'Broughton & Telford' ? '✅ Intersection cleanup passed' : '❌ Intersection cleanup failed');
+  results.push(!normalizeIntersectionForUse('2999-2923 Prescott') ? '✅ Address range rejection passed' : '❌ Address range rejection failed');
   results.push(el('locatePreview') ? '✅ Locate preview panel found' : '❌ Locate preview panel missing');
   results.push(el('locationsTable') ? '✅ Locations table found' : '❌ Locations table missing');
 
