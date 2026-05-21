@@ -221,6 +221,7 @@ td input{min-width:150px}
       <button id="genSelectedBtn">Generate Selected Zone</button>
       <button class="btn-secondary" id="genAllBtn">Generate All Zones</button>
       <button class="btn-secondary" id="copyBtn">Copy Locate Text</button>
+      <button class="btn-secondary" id="appCheckBtn">Run App Check</button>
     </div>
     <p id="copyStatus" class="footer-note">No locate text generated yet.</p>
     <label for="locatePreview">Generated Locate Text</label>
@@ -507,6 +508,9 @@ function parseEstimate(){
       dimensions:extractDimensions(context),
       notes:extractNotes(context),
       nearestIntersection:guessIntersection(name),
+      driveFrom:guessIntersection(name),
+      driveFromGps:'',
+      distanceToBeginFeet:'',
       startPoint:parsed.start,
       endPoint:parsed.end,
       direction:inferDirectionFromText(name),
@@ -786,6 +790,19 @@ async function generateCoordinatesForAll(){
     if(!item.gpsEnd && item.endPoint){
       item.gpsEnd = await geocodeAddress(item.endPoint,geocoder);
     }
+
+    if(!item.driveFrom){
+      item.driveFrom = item.nearestIntersection || '';
+    }
+
+    if(!item.driveFromGps && item.driveFrom){
+      const driveFromAddress = item.driveFrom + ', ' + val('city') + ', TX';
+      item.driveFromGps = await geocodeAddress(driveFromAddress,geocoder);
+    }
+
+    if(item.driveFromGps && item.gpsStart){
+      item.distanceToBeginFeet = String(distanceFeet(item.driveFromGps,item.gpsStart));
+    }
   }
 
   renderLocations();
@@ -829,6 +846,9 @@ function renderLocations(){
           <th>Zone</th>
           <th>Location</th>
           <th>Intersection</th>
+          <th>Drive From</th>
+          <th>Drive From GPS</th>
+          <th>To Begin LF</th>
           <th>Start</th>
           <th>End</th>
           <th>Direction</th>
@@ -846,6 +866,9 @@ function renderLocations(){
             <td><input value="${escapeHtml(item.zone)}" onchange="updateField(${index},'zone',this.value)"></td>
             <td><input value="${escapeHtml(item.location)}" onchange="updateField(${index},'location',this.value)"></td>
             <td><input value="${escapeHtml(item.nearestIntersection)}" onchange="updateField(${index},'nearestIntersection',this.value)"></td>
+            <td><input value="${escapeHtml(item.driveFrom || item.nearestIntersection || '')}" onchange="updateField(${index},'driveFrom',this.value)"></td>
+            <td><input value="${escapeHtml(item.driveFromGps || '')}" onchange="updateField(${index},'driveFromGps',this.value)"></td>
+            <td><input value="${escapeHtml(item.distanceToBeginFeet || '')}" onchange="updateField(${index},'distanceToBeginFeet',this.value)"></td>
             <td><input value="${escapeHtml(item.startPoint)}" onchange="updateField(${index},'startPoint',this.value)"></td>
             <td><input value="${escapeHtml(item.endPoint)}" onchange="updateField(${index},'endPoint',this.value)"></td>
             <td><input value="${escapeHtml(item.direction)}" onchange="updateField(${index},'direction',this.value)"></td>
@@ -891,6 +914,9 @@ function addManualRow(){
     dimensions:'',
     notes:'',
     nearestIntersection:'',
+    driveFrom:'',
+    driveFromGps:'',
+    distanceToBeginFeet:'',
     startPoint:'',
     endPoint:'',
     direction:'',
@@ -929,6 +955,60 @@ function stripCityState(value){
     .trim();
 }
 
+
+function buildIntersectionToBeginDirections(item,bufferedStart){
+  const fromName = item.driveFrom || item.nearestIntersection || 'nearest intersection';
+  const fromGps = item.driveFromGps || '';
+  const beginGps = bufferedStart || item.gpsStart || '';
+
+  if(!beginGps){
+    return `From ${fromName}, proceed to the described work area. BEGIN LOCATE GPS needs review.`;
+  }
+
+  let distanceToBegin = item.distanceToBeginFeet || '';
+  let directionToBegin = '';
+
+  const fromPoint = parseLatLng(fromGps);
+  const beginPoint = parseLatLng(beginGps);
+
+  if(fromPoint && beginPoint){
+    distanceToBegin = distanceToBegin || String(distanceFeet(fromGps,beginGps));
+    directionToBegin = cardinalFromBearing(bearingDegrees(fromPoint,beginPoint));
+  }
+
+  if(distanceToBegin && directionToBegin){
+    return `From ${fromName}, travel approximately ${distanceToBegin} ft ${directionToBegin} to BEGIN LOCATE at GPS ${beginGps}.`;
+  }
+
+  if(distanceToBegin){
+    return `From ${fromName}, travel approximately ${distanceToBegin} ft to BEGIN LOCATE at GPS ${beginGps}.`;
+  }
+
+  return `From ${fromName}, proceed to BEGIN LOCATE at GPS ${beginGps}.`;
+}
+
+function buildBeginToEndDirections(item,bufferedStart,bufferedEnd){
+  const start = bufferedStart || item.gpsStart || '';
+  const end = bufferedEnd || item.gpsEnd || '';
+
+  if(!start || !end){
+    return `Continue through the described work area to END LOCATE. END GPS needs review.`;
+  }
+
+  const distance = distanceFeet(start,end) || item.linearFeet || 'field-measured';
+  let direction = item.direction || 'along roadway';
+
+  const startPoint = parseLatLng(start);
+  const endPoint = parseLatLng(end);
+
+  if(startPoint && endPoint){
+    direction = cardinalFromBearing(bearingDegrees(startPoint,endPoint));
+  }
+
+  return `From BEGIN LOCATE, continue approximately ${distance} LF ${direction} to END LOCATE at GPS ${end}.`;
+}
+
+
 function buildLocateText(zone,items){
   const city = val('city');
   const county = val('county');
@@ -941,23 +1021,15 @@ function buildLocateText(zone,items){
 
   const lines = items.map((item,index) => {
     const buffered = bufferedGps(item.gpsStart,item.gpsEnd,bufferFeet);
-    const startText = item.gpsStart ? `GPS ${buffered.start}` : `${item.startPoint || item.location} [GPS NEEDS REVIEW]`;
-    const endText = item.gpsEnd ? `GPS ${buffered.end}` : `${item.endPoint || item.location} [GPS NEEDS REVIEW]`;
+    const bufferedStart = item.gpsStart ? buffered.start : '';
+    const bufferedEnd = item.gpsEnd ? buffered.end : '';
 
-    let distance = '';
-    if(buffered.start && buffered.end){
-      distance = distanceFeet(buffered.start,buffered.end);
-    }
+    const lineOne = buildIntersectionToBeginDirections(item,bufferedStart);
+    const lineTwo = buildBeginToEndDirections(item,bufferedStart,bufferedEnd);
+    const locateWidth = item.locateWidth || '15 ft each side of work area';
+    const side = item.sideOfRoad || 'Both Sides';
 
-    let direction = item.direction || 'along roadway';
-    const parsedStart = parseLatLng(buffered.start);
-    const parsedEnd = parseLatLng(buffered.end);
-
-    if(parsedStart && parsedEnd){
-      direction = cardinalFromBearing(bearingDegrees(parsedStart,parsedEnd));
-    }
-
-    return `${index+1}. From ${item.nearestIntersection || 'nearest intersection'}, proceed to BEGIN LOCATE at ${startText}. Continue approximately ${distance || item.linearFeet || 'field-measured'} LF ${direction} to END LOCATE at ${endText}. Locate width: ${item.locateWidth || '15 ft each side of work area'}. Side of roadway: ${item.sideOfRoad || 'Both Sides'}.`;
+    return `${index+1}. ${lineOne}\n   ${lineTwo}\n   Locate width: ${locateWidth}. Side of roadway: ${side}.`;
   }).join('\n');
 
   return `TEXAS811 LOCATE REQUEST
@@ -1080,11 +1152,14 @@ function downloadCsv(){
     return;
   }
 
-  const headers = ['Zone','Location','Intersection','Start','End','Direction','LF','Side','GPS Start','GPS End'];
+  const headers = ['Zone','Location','Intersection','Drive From','Drive From GPS','To Begin LF','Start','End','Direction','LF','Side','GPS Start','GPS End'];
   const rows = locations.map(item => [
     item.zone,
     item.location,
     item.nearestIntersection,
+    item.driveFrom || '',
+    item.driveFromGps || '',
+    item.distanceToBeginFeet || '',
     item.startPoint,
     item.endPoint,
     item.direction,
@@ -1136,6 +1211,53 @@ async function handlePdfUpload(event){
   }
 }
 
+
+function runAppCheck(){
+  const results = [];
+
+  results.push(typeof parseEstimate === 'function' ? '✅ Parser function loaded' : '❌ Parser function missing');
+  results.push(typeof generateCoordinatesForAll === 'function' ? '✅ GPS function loaded' : '❌ GPS function missing');
+  results.push(typeof generateAllZones === 'function' ? '✅ Locate generation function loaded' : '❌ Locate generation function missing');
+  results.push(el('locatePreview') ? '✅ Locate preview panel found' : '❌ Locate preview panel missing');
+  results.push(el('locationsTable') ? '✅ Locations table found' : '❌ Locations table missing');
+
+  const oldText = val('estimateText');
+  const oldLocations = JSON.parse(JSON.stringify(locations));
+
+  try{
+    el('estimateText').value = sampleText;
+    parseEstimate();
+
+    if(locations.length > 0){
+      results.push(`✅ Sample extraction passed: ${locations.length} location(s) found`);
+    }else{
+      results.push('❌ Sample extraction failed: 0 locations found');
+    }
+
+    generatedLocateText = buildLocateText(locations[0].zone || 'Test Zone',locations.slice(0,1));
+    updateLocatePreview();
+
+    if(generatedLocateText.includes('TEXAS811 LOCATE REQUEST')){
+      results.push('✅ Locate text generation passed');
+    }else{
+      results.push('❌ Locate text generation failed');
+    }
+  }catch(error){
+    results.push('❌ App check error: ' + error.message);
+  }
+
+  el('estimateText').value = oldText;
+  locations = oldLocations;
+  renderLocations();
+  renderSummary();
+  updateZoneSelect();
+
+  const report = results.join('\n');
+  generatedLocateText = report;
+  updateLocatePreview();
+  setStatus('App check complete. Review results below.');
+}
+
 function attachEvents(){
   el('extractBtn').addEventListener('click',parseEstimate);
   el('sampleBtn').addEventListener('click',loadTributeExample);
@@ -1149,6 +1271,7 @@ function attachEvents(){
   el('genSelectedBtn').addEventListener('click',generateLocateForSelectedZone);
   el('genAllBtn').addEventListener('click',generateAllZones);
   el('copyBtn').addEventListener('click',copyLocateText);
+  el('appCheckBtn').addEventListener('click',runAppCheck);
   el('pdfUpload').addEventListener('change',handlePdfUpload);
 }
 
