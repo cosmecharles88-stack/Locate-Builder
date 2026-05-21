@@ -208,6 +208,7 @@ td input{min-width:150px}
       <button id="manualBtn">Add Manual Location</button>
       <button id="zoneBtn">Auto-Assign Zones</button>
       <button id="gpsBtn">Generate GPS Coordinates</button>
+      <button class="btn-secondary" id="intersectionBtn">Auto-Find Intersections</button>
       <button class="btn-secondary" id="csvBtn">Download CSV</button>
     </div>
   </section>
@@ -762,6 +763,88 @@ function geocodeAddress(address,geocoder){
 }
 
 
+
+function cleanGoogleIntersectionName(formattedAddress){
+  let text = String(formattedAddress || '').trim();
+
+  text = text.replace(', USA','');
+  text = text.replace(/, United States$/i,'');
+  text = text.replace(/\s+/g,' ');
+
+  return text.trim();
+}
+
+function getRouteStreetNameFromReverseResults(results){
+  if(!results || !results.length) return '';
+
+  for(const result of results){
+    if(result.types && result.types.includes('route')){
+      return cleanGoogleIntersectionName(result.formatted_address || '');
+    }
+  }
+
+  return '';
+}
+
+function findIntersectionResult(results){
+  if(!results || !results.length) return '';
+
+  for(const result of results){
+    if(result.types && result.types.includes('intersection')){
+      return cleanGoogleIntersectionName(result.formatted_address || '');
+    }
+  }
+
+  return '';
+}
+
+function reverseGeocodeForNearestIntersection(latLngText,geocoder){
+  return new Promise(resolve => {
+    const point = parseLatLng(latLngText);
+
+    if(!point){
+      resolve('');
+      return;
+    }
+
+    geocoder.geocode(
+      {location:{lat:point.lat,lng:point.lng}},
+      (results,status) => {
+        if(status !== 'OK' || !results || !results.length){
+          gpsLog('Reverse geocode failed for nearest intersection: ' + status);
+          resolve('');
+          return;
+        }
+
+        const intersection = findIntersectionResult(results);
+        if(intersection){
+          resolve(intersection);
+          return;
+        }
+
+        const routeName = getRouteStreetNameFromReverseResults(results);
+        if(routeName){
+          resolve(routeName);
+          return;
+        }
+
+        resolve('');
+      }
+    );
+  });
+}
+
+function shouldAutoFindIntersection(item){
+  const current = String(item.nearestIntersection || '').trim().toLowerCase();
+
+  if(!current) return true;
+  if(current === 'nearest intersection') return true;
+  if(current.includes('needs review')) return true;
+
+  return false;
+}
+
+
 async function getRouteDirectionsFromGoogle(originGps,destinationGps,apiKey){
   const origin=parseLatLng(originGps);
   const destination=parseLatLng(destinationGps);
@@ -870,19 +953,34 @@ async function generateCoordinatesForAll(){
       item.gpsEnd = await geocodeAddress(item.endPoint,geocoder);
     }
 
+    if(item.gpsStart && shouldAutoFindIntersection(item)){
+      const autoIntersection = await reverseGeocodeForNearestIntersection(item.gpsStart,geocoder);
+
+      if(autoIntersection){
+        item.nearestIntersection = autoIntersection;
+        item.driveFrom = autoIntersection;
+      }
+    }
+
     if(!item.driveFrom){
       item.driveFrom = item.nearestIntersection || '';
     }
 
     if(!item.driveFromGps && item.driveFrom){
-      const driveFromAddress = item.driveFrom + ', ' + val('city') + ', TX';
+      const driveFromAddress = item.driveFrom;
       item.driveFromGps = await geocodeAddress(driveFromAddress,geocoder);
     }
 
     if(item.driveFromGps && item.gpsStart){
-      item.distanceToBeginFeet = String(distanceFeet(item.driveFromGps,item.gpsStart));
+      const calculatedToBegin = distanceFeet(item.driveFromGps,item.gpsStart);
 
-      if(!item.routeDirections){
+      if(calculatedToBegin && calculatedToBegin > 25){
+        item.distanceToBeginFeet = String(calculatedToBegin);
+      }else if(!item.distanceToBeginFeet){
+        item.distanceToBeginFeet = '';
+      }
+
+      if(!item.routeDirections && calculatedToBegin && calculatedToBegin > 25){
         item.routeDirections = await getRouteDirectionsFromGoogle(item.driveFromGps,item.gpsStart,key);
       }
     }
@@ -1261,6 +1359,70 @@ function clearAll(){
   clearGpsLog();
 }
 
+
+async function autoFindIntersectionsForAll(){
+  clearGpsLog();
+
+  const key = val('googleApiKey').trim();
+  if(!key){
+    alert('Paste Google Maps API key first.');
+    return;
+  }
+
+  try{
+    gpsLog('Loading Google Maps...');
+    await loadGoogleMaps(key);
+  }catch(error){
+    gpsLog(error.message);
+    alert('Google Maps failed to load.');
+    return;
+  }
+
+  const geocoder = new google.maps.Geocoder();
+
+  for(let i=0; i<locations.length; i++){
+    const item = locations[i];
+
+    if(!item.gpsStart && item.startPoint){
+      item.gpsStart = await geocodeAddress(item.startPoint,geocoder);
+    }
+
+    if(item.gpsStart && shouldAutoFindIntersection(item)){
+      const autoIntersection = await reverseGeocodeForNearestIntersection(item.gpsStart,geocoder);
+
+      if(autoIntersection){
+        item.nearestIntersection = autoIntersection;
+        item.driveFrom = autoIntersection;
+      }
+    }
+
+    if(!item.driveFrom){
+      item.driveFrom = item.nearestIntersection || '';
+    }
+
+    if(!item.driveFromGps && item.driveFrom){
+      item.driveFromGps = await geocodeAddress(item.driveFrom,geocoder);
+    }
+
+    if(item.driveFromGps && item.gpsStart){
+      const calculatedToBegin = distanceFeet(item.driveFromGps,item.gpsStart);
+      if(calculatedToBegin && calculatedToBegin > 25){
+        item.distanceToBeginFeet = String(calculatedToBegin);
+      }
+
+      if(!item.routeDirections && calculatedToBegin && calculatedToBegin > 25){
+        item.routeDirections = await getRouteDirectionsFromGoogle(item.driveFromGps,item.gpsStart,key);
+      }
+    }
+  }
+
+  renderLocations();
+  renderSummary();
+  gpsLog('Finished auto-finding intersections.');
+  alert('Intersection lookup complete. Review rows before submitting.');
+}
+
+
 function downloadCsv(){
   if(!locations.length){
     alert('No locations to download.');
@@ -1335,6 +1497,7 @@ function runAppCheck(){
   results.push(typeof generateCoordinatesForAll === 'function' ? '✅ GPS function loaded' : '❌ GPS function missing');
   results.push(typeof generateAllZones === 'function' ? '✅ Locate generation function loaded' : '❌ Locate generation function missing');
   results.push(typeof getRouteDirectionsFromGoogle === 'function' ? '✅ Routes helper loaded' : '❌ Routes helper missing');
+  results.push(typeof reverseGeocodeForNearestIntersection === 'function' ? '✅ Nearest intersection helper loaded' : '❌ Nearest intersection helper missing');
   results.push(el('locatePreview') ? '✅ Locate preview panel found' : '❌ Locate preview panel missing');
   results.push(el('locationsTable') ? '✅ Locations table found' : '❌ Locations table missing');
 
@@ -1384,6 +1547,7 @@ function attachEvents(){
   el('manualBtn').addEventListener('click',addManualRow);
   el('zoneBtn').addEventListener('click',() => autoAssignZones(true));
   el('gpsBtn').addEventListener('click',generateCoordinatesForAll);
+  el('intersectionBtn').addEventListener('click',autoFindIntersectionsForAll);
   el('csvBtn').addEventListener('click',downloadCsv);
   el('genSelectedBtn').addEventListener('click',generateLocateForSelectedZone);
   el('genAllBtn').addEventListener('click',generateAllZones);
