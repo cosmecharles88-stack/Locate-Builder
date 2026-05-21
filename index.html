@@ -1009,15 +1009,54 @@ function buildLocateText(zone,items){
   const workFor = getVal('workDoneFor');
   const bufferFeet = parseInt(getVal('locateBuffer') || '20',10) || 0;
 
-  const workAreas = [...new Set(items.map(formatWorkAreaName).filter(Boolean))].join('; ') || 'Work area needs review.';
-  const intersections = [...new Set(items.map(item => normalizeIntersectionForUse(item.nearestIntersection)).filter(Boolean))].join('; ') || 'Nearest intersection needs review.';
+  const sections = items.map(function(item,index){
+    const workArea = formatWorkAreaName(item) || item.location || 'Work area needs review';
 
-  const addressStyleItems = items.filter(item => !shouldUseDrivingDirections(item));
-  const gpsOnlyItems = items.filter(item => shouldUseDrivingDirections(item));
+    let intersection = normalizeIntersectionForUse(item.nearestIntersection || '');
+    if(!intersection){
+      intersection = 'Nearest intersection needs review';
+    }
 
-  const addressLines = addressStyleItems.length ? buildAddressWorkAreaLines(addressStyleItems) : '';
-  const gpsLimits = items.map((item,index) => buildGpsLimitLine(item,index,bufferFeet)).join('\n');
-  const drivingDirections = gpsOnlyItems.map((item,index) => buildDrivingDirectionLine(item,index,bufferFeet)).join('\n');
+    const buffered = bufferedGps(item.gpsStart,item.gpsEnd,bufferFeet);
+    const startGps = item.gpsStart ? buffered.start : '';
+    const endGps = item.gpsEnd ? buffered.end : '';
+
+    const side = item.sideOfRoad || 'Both Sides';
+
+    let instruction = `Need all utilities located at ${workArea} across roadway panels, curb line, sidewalk, and adjacent right-of-way areas.`;
+
+    if(side === 'Across Street'){
+      instruction = `Need all utilities located at ${workArea} across both sides of roadway panels, curb line, sidewalk, and adjacent right-of-way areas.`;
+    }
+
+    instruction += ' We will be injecting polyurethane foam beneath the roadway to level and stabilize concrete.';
+
+    let gpsText = 'GPS needs review.';
+
+    if(startGps && endGps && startGps !== endGps){
+      gpsText = `START GPS: ${startGps}
+END GPS: ${endGps}`;
+    }else if(startGps){
+      gpsText = `GPS POINT: ${startGps}`;
+    }
+
+    return `${index+1}. WORK AREA
+${workArea}
+
+NEAREST INTERSECTION
+${intersection}
+
+WORK SITE LOCATE INSTRUCTIONS
+${instruction}
+
+SUPPORTING GPS
+${gpsText}
+${bufferFeet} ft locate buffer included before and after work limits.`;
+  }).join('
+
+--------------------------------
+
+');
 
   return `TEXAS811 LOCATE REQUEST
 
@@ -1026,23 +1065,7 @@ COUNTY: ${county}
 WORK FOR: ${workFor}
 ZONE: ${zone}
 
-WORK AREA
-${workAreas}
-
-NEAREST INTERSECTION(S)
-${intersections}
-
-WORK SITE LOCATE INSTRUCTIONS
-${buildConciseWorkInstruction(items)}
-
-${addressLines ? `LOCATION REFERENCES\n${addressLines}\n\n` : ''}GPS LIMITS
-${gpsLimits}
-
-${drivingDirections ? `DRIVING DIRECTIONS TO WORK SITE\n${drivingDirections}\n\n` : ''}LOCATOR NOTES
-- Mark all utilities within the described work limits.
-- Include both sides of roadway where applicable.
-- GPS points are supplied as support for the locate limits.
-- Driving directions are only included for GPS-only or hard-to-address work areas.`;
+${sections}`;
 }
 
 function generateLocateForSelectedZone(){
