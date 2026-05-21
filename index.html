@@ -296,27 +296,23 @@
       </div>
     </section>
 
-    <section class="grid grid-2">
-      <div class="card">
-        <h2>5. Generate Texas811 Locate Packet</h2>
-        <label for="zoneSelect">Zone</label>
-        <select id="zoneSelect"></select>
-        <div class="btn-row">
-          <button onclick="generateLocateForSelectedZone()">Generate Selected Zone</button>
-          <button class="btn-secondary" onclick="generateAllZones()">Generate All Zones</button>
-          <button class="btn-secondary" onclick="copyLocateText()">Copy Text</button>
-        </div>
+    <section class="card">
+      <h2>5. Generate Texas811 Locate Packet</h2>
+      <p class="subtext">Generate the locate wording, then copy it directly to your clipboard. The large output preview has been removed to keep the screen cleaner.</p>
+      <label for="zoneSelect">Zone</label>
+      <select id="zoneSelect"></select>
+      <div class="btn-row">
+        <button onclick="generateLocateForSelectedZone()">Generate Selected Zone</button>
+        <button class="btn-secondary" onclick="generateAllZones()">Generate All Zones</button>
+        <button class="btn-secondary" onclick="copyLocateText()">Copy Locate Text</button>
       </div>
-
-      <div class="card">
-        <h2>Locate Packet Output</h2>
-        <div id="locateOutput" class="locate-output">Locate wording will appear here.</div>
-      </div>
+      <p id="copyStatus" class="footer-note">No locate text generated yet.</p>
     </section>
   </main>
 
   <script>
     let locations = [];
+    window.generatedLocateText = '';
 
     const sampleText = `
 Lifting & Leveling Job Location-8353-8337 Burnley and across the Street Holding water (METHOD INJECTION ONLY)
@@ -369,7 +365,9 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
       renderLocations();
       renderSummary();
       updateZoneSelect();
-      document.getElementById('locateOutput').textContent = 'Locate wording will appear here.';
+      window.generatedLocateText = '';
+      const copyStatus = document.getElementById('copyStatus');
+      if (copyStatus) copyStatus.textContent = 'No locate text generated yet.';
     }
 
     function parseEstimate() {
@@ -838,12 +836,16 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
     function generateLocateForSelectedZone() {
       const zone = document.getElementById('zoneSelect').value;
       const zoneItems = locations.filter(x => (x.zone || 'Unassigned') === zone);
-      document.getElementById('locateOutput').textContent = buildLocateText(zone, zoneItems);
+      window.generatedLocateText = buildLocateText(zone, zoneItems);
+      const copyStatus = document.getElementById('copyStatus');
+      if (copyStatus) copyStatus.textContent = `Generated locate text for ${zone}. Click Copy Locate Text.`;
     }
 
     function generateAllZones() {
       const zones = [...new Set(locations.map(x => x.zone || 'Unassigned'))];
-      document.getElementById('locateOutput').textContent = zones.map(zone => buildLocateText(zone, locations.filter(x => (x.zone || 'Unassigned') === zone))).join('\n\n------------------------------------------------------------\n\n') || 'No zones available.';
+      window.generatedLocateText = zones.map(zone => buildLocateText(zone, locations.filter(x => (x.zone || 'Unassigned') === zone))).join('\n\n------------------------------------------------------------\n\n') || '';
+      const copyStatus = document.getElementById('copyStatus');
+      if (copyStatus) copyStatus.textContent = `Generated locate text for ${zones.length} zone(s). Click Copy Locate Text.`;
     }
 
     function buildLocateText(zone, items) {
@@ -877,8 +879,18 @@ Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
     }
 
     function copyLocateText() {
-      const text = document.getElementById('locateOutput').textContent;
-      navigator.clipboard.writeText(text).then(() => alert('Locate packet copied.')).catch(() => alert('Copy failed. Manually select and copy the text.'));
+      const text = window.generatedLocateText || '';
+      if (!text) {
+        alert('Generate locate wording first.');
+        return;
+      }
+      navigator.clipboard.writeText(text)
+        .then(() => {
+          const copyStatus = document.getElementById('copyStatus');
+          if (copyStatus) copyStatus.textContent = 'Locate packet copied to clipboard.';
+          alert('Locate packet copied.');
+        })
+        .catch(() => alert('Copy failed. Generate the text again, then try copying.'));
     }
 
     function downloadCsv() {
