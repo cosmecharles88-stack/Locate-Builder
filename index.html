@@ -511,6 +511,7 @@ function parseEstimate(){
       driveFrom:guessIntersection(name),
       driveFromGps:'',
       distanceToBeginFeet:'',
+      routeDirections:'',
       startPoint:parsed.start,
       endPoint:parsed.end,
       direction:inferDirectionFromText(name),
@@ -760,6 +761,84 @@ function geocodeAddress(address,geocoder){
   });
 }
 
+
+async function getRouteDirectionsFromGoogle(originGps,destinationGps,apiKey){
+  const origin=parseLatLng(originGps);
+  const destination=parseLatLng(destinationGps);
+
+  if(!origin||!destination||!apiKey){
+    return '';
+  }
+
+  try{
+    const response=await fetch('https://routes.googleapis.com/directions/v2:computeRoutes',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'X-Goog-Api-Key':apiKey,
+        'X-Goog-FieldMask':'routes.distanceMeters,routes.duration,routes.legs.steps.navigationInstruction,routes.legs.steps.distanceMeters'
+      },
+      body:JSON.stringify({
+        origin:{location:{latLng:{latitude:origin.lat,longitude:origin.lng}}},
+        destination:{location:{latLng:{latitude:destination.lat,longitude:destination.lng}}},
+        travelMode:'DRIVE',
+        routingPreference:'TRAFFIC_UNAWARE',
+        units:'IMPERIAL'
+      })
+    });
+
+    if(!response.ok){
+      gpsLog('Routes API status: '+response.status);
+      return '';
+    }
+
+    const data=await response.json();
+    const route=data.routes&&data.routes[0];
+
+    if(!route){
+      gpsLog('Routes API returned no route.');
+      return '';
+    }
+
+    return summarizeGoogleRoute(route,destinationGps);
+  }catch(error){
+    console.warn('Routes API failed:',error);
+    gpsLog('Routes API failed; using fallback wording.');
+    return '';
+  }
+}
+
+function summarizeGoogleRoute(route,destinationGps){
+  const totalFeet=route.distanceMeters ? Math.round(route.distanceMeters*3.28084) : '';
+  const steps=(route.legs&&route.legs[0]&&route.legs[0].steps)||[];
+
+  const cleanSteps=steps
+    .map(function(step){
+      const instruction=step.navigationInstruction&&step.navigationInstruction.instructions ? step.navigationInstruction.instructions : '';
+      const feet=step.distanceMeters ? Math.round(step.distanceMeters*3.28084) : '';
+      if(!instruction)return '';
+      return feet ? instruction+' for approx. '+feet+' ft' : instruction;
+    })
+    .filter(Boolean);
+
+  if(cleanSteps.length){
+    let text=cleanSteps.join('. ');
+    if(!text.endsWith('.'))text+='.';
+    if(totalFeet){
+      text+=' Total driving distance to BEGIN LOCATE is approx. '+totalFeet+' ft.';
+    }
+    text+=' BEGIN LOCATE is at GPS '+destinationGps+'.';
+    return text;
+  }
+
+  if(totalFeet){
+    return 'Drive approx. '+totalFeet+' ft to BEGIN LOCATE at GPS '+destinationGps+'.';
+  }
+
+  return '';
+}
+
+
 async function generateCoordinatesForAll(){
   clearGpsLog();
 
@@ -802,6 +881,10 @@ async function generateCoordinatesForAll(){
 
     if(item.driveFromGps && item.gpsStart){
       item.distanceToBeginFeet = String(distanceFeet(item.driveFromGps,item.gpsStart));
+
+      if(!item.routeDirections){
+        item.routeDirections = await getRouteDirectionsFromGoogle(item.driveFromGps,item.gpsStart,key);
+      }
     }
   }
 
@@ -849,6 +932,7 @@ function renderLocations(){
           <th>Drive From</th>
           <th>Drive From GPS</th>
           <th>To Begin LF</th>
+          <th>Route Directions</th>
           <th>Start</th>
           <th>End</th>
           <th>Direction</th>
@@ -869,6 +953,7 @@ function renderLocations(){
             <td><input value="${escapeHtml(item.driveFrom || item.nearestIntersection || '')}" onchange="updateField(${index},'driveFrom',this.value)"></td>
             <td><input value="${escapeHtml(item.driveFromGps || '')}" onchange="updateField(${index},'driveFromGps',this.value)"></td>
             <td><input value="${escapeHtml(item.distanceToBeginFeet || '')}" onchange="updateField(${index},'distanceToBeginFeet',this.value)"></td>
+            <td><input value="${escapeHtml(item.routeDirections || '')}" onchange="updateField(${index},'routeDirections',this.value)"></td>
             <td><input value="${escapeHtml(item.startPoint)}" onchange="updateField(${index},'startPoint',this.value)"></td>
             <td><input value="${escapeHtml(item.endPoint)}" onchange="updateField(${index},'endPoint',this.value)"></td>
             <td><input value="${escapeHtml(item.direction)}" onchange="updateField(${index},'direction',this.value)"></td>
@@ -917,6 +1002,7 @@ function addManualRow(){
     driveFrom:'',
     driveFromGps:'',
     distanceToBeginFeet:'',
+    routeDirections:'',
     startPoint:'',
     endPoint:'',
     direction:'',
@@ -957,23 +1043,44 @@ function stripCityState(value){
 
 
 function buildIntersectionToBeginDirections(item,bufferedStart){
-  const fromName = item.driveFrom || item.nearestIntersection || 'nearest intersection';
-  const fromGps = item.driveFromGps || '';
+  const fromName = item.driveFrom || item.nearestIntersection || '';
   const beginGps = bufferedStart || item.gpsStart || '';
+  const fromGps = item.driveFromGps || '';
 
-  if(!beginGps){
-    return `From ${fromName}, proceed to the described work area. BEGIN LOCATE GPS needs review.`;
+  if(item.routeDirections){
+    return item.routeDirections;
   }
 
-  let distanceToBegin = item.distanceToBeginFeet || '';
+  if(!beginGps){
+    if(fromName){
+      return `From ${fromName}, proceed to the described work area. BEGIN LOCATE GPS needs review.`;
+    }
+    return `Proceed to the described work area. BEGIN LOCATE GPS needs review.`;
+  }
+
+  if(!fromName || fromName.toLowerCase()==='nearest intersection'){
+    return `BEGIN LOCATE at GPS ${beginGps}.`;
+  }
+
+  let distanceToBegin = '';
   let directionToBegin = '';
 
   const fromPoint = parseLatLng(fromGps);
   const beginPoint = parseLatLng(beginGps);
 
   if(fromPoint && beginPoint){
-    distanceToBegin = distanceToBegin || String(distanceFeet(fromGps,beginGps));
-    directionToBegin = cardinalFromBearing(bearingDegrees(fromPoint,beginPoint));
+    const calculatedDistance = distanceFeet(fromGps,beginGps);
+    if(calculatedDistance && calculatedDistance > 25){
+      distanceToBegin = String(calculatedDistance);
+      directionToBegin = cardinalFromBearing(bearingDegrees(fromPoint,beginPoint));
+    }
+  }
+
+  if(!distanceToBegin && item.distanceToBeginFeet){
+    const manualDistance = parseInt(item.distanceToBeginFeet,10);
+    if(manualDistance > 25){
+      distanceToBegin = String(manualDistance);
+    }
   }
 
   if(distanceToBegin && directionToBegin){
@@ -984,7 +1091,7 @@ function buildIntersectionToBeginDirections(item,bufferedStart){
     return `From ${fromName}, travel approximately ${distanceToBegin} ft to BEGIN LOCATE at GPS ${beginGps}.`;
   }
 
-  return `From ${fromName}, proceed to BEGIN LOCATE at GPS ${beginGps}.`;
+  return `At or near ${fromName}, BEGIN LOCATE at GPS ${beginGps}.`;
 }
 
 function buildBeginToEndDirections(item,bufferedStart,bufferedEnd){
@@ -995,14 +1102,22 @@ function buildBeginToEndDirections(item,bufferedStart,bufferedEnd){
     return `Continue through the described work area to END LOCATE. END GPS needs review.`;
   }
 
-  const distance = distanceFeet(start,end) || item.linearFeet || 'field-measured';
-  let direction = item.direction || 'along roadway';
-
   const startPoint = parseLatLng(start);
   const endPoint = parseLatLng(end);
+  let distance = distanceFeet(start,end);
+  let direction = item.direction || 'along roadway';
 
   if(startPoint && endPoint){
     direction = cardinalFromBearing(bearingDegrees(startPoint,endPoint));
+  }
+
+  if(!distance || distance <= 25){
+    const manualLf = parseInt(item.linearFeet,10);
+    if(manualLf && manualLf > 25){
+      distance = manualLf;
+    }else{
+      return `Locate the described work area around BEGIN LOCATE at GPS ${start}. END LOCATE is at or near the same GPS point and should be field verified.`;
+    }
   }
 
   return `From BEGIN LOCATE, continue approximately ${distance} LF ${direction} to END LOCATE at GPS ${end}.`;
@@ -1054,7 +1169,7 @@ ${lines}
 LOCATOR NOTES
 - Mark all utilities within the described start/stop limits.
 - Include both sides of the roadway where applicable.
-- GPS start/end points include a ${bufferFeet} ft buffer before and after the work area.`;
+- GPS start/end points include a ${bufferFeet} ft buffer before and after the work area.\n- If BEGIN and END GPS are the same or very close, locate the described area around that point and field verify limits.`;
 }
 
 function generateLocateForSelectedZone(){
@@ -1152,7 +1267,7 @@ function downloadCsv(){
     return;
   }
 
-  const headers = ['Zone','Location','Intersection','Drive From','Drive From GPS','To Begin LF','Start','End','Direction','LF','Side','GPS Start','GPS End'];
+  const headers = ['Zone','Location','Intersection','Drive From','Drive From GPS','To Begin LF','Route Directions','Start','End','Direction','LF','Side','GPS Start','GPS End'];
   const rows = locations.map(item => [
     item.zone,
     item.location,
@@ -1160,6 +1275,7 @@ function downloadCsv(){
     item.driveFrom || '',
     item.driveFromGps || '',
     item.distanceToBeginFeet || '',
+    item.routeDirections || '',
     item.startPoint,
     item.endPoint,
     item.direction,
@@ -1218,6 +1334,7 @@ function runAppCheck(){
   results.push(typeof parseEstimate === 'function' ? '✅ Parser function loaded' : '❌ Parser function missing');
   results.push(typeof generateCoordinatesForAll === 'function' ? '✅ GPS function loaded' : '❌ GPS function missing');
   results.push(typeof generateAllZones === 'function' ? '✅ Locate generation function loaded' : '❌ Locate generation function missing');
+  results.push(typeof getRouteDirectionsFromGoogle === 'function' ? '✅ Routes helper loaded' : '❌ Routes helper missing');
   results.push(el('locatePreview') ? '✅ Locate preview panel found' : '❌ Locate preview panel missing');
   results.push(el('locationsTable') ? '✅ Locations table found' : '❌ Locations table missing');
 
