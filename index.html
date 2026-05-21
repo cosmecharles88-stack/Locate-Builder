@@ -1004,68 +1004,85 @@ function buildBeginToEndDirections(item,bufferedStart,bufferedEnd){
 }
 
 function buildLocateText(zone,items){
-  const city = getVal('city');
-  const county = getVal('county');
-  const workFor = getVal('workDoneFor');
-  const bufferFeet = parseInt(getVal('locateBuffer') || '20',10) || 0;
+  const city=getVal('city');
+  const county=getVal('county');
+  const workFor=getVal('workDoneFor');
+  const bufferFeet=parseInt(getVal('locateBuffer')||'20',10)||0;
 
-  const sections = items.map(function(item,index){
-    const workArea = formatWorkAreaName(item) || item.location || 'Work area needs review';
+  const sections=items.map(function(item,index){
+    const workArea=formatWorkAreaName(item)||item.location||'Work area needs review';
 
-    let intersection = normalizeIntersectionForUse(item.nearestIntersection || '');
+    let intersection=normalizeIntersectionForUse(item.nearestIntersection||'');
     if(!intersection){
-      intersection = 'Nearest intersection needs review';
+      intersection='Nearest intersection needs review';
     }
 
-    const buffered = bufferedGps(item.gpsStart,item.gpsEnd,bufferFeet);
-    const startGps = item.gpsStart ? buffered.start : '';
-    const endGps = item.gpsEnd ? buffered.end : '';
+    const buffered=bufferedGps(item.gpsStart,item.gpsEnd,bufferFeet);
+    const startGps=item.gpsStart?buffered.start:'';
+    const endGps=item.gpsEnd?buffered.end:'';
 
-    const side = item.sideOfRoad || 'Both Sides';
+    const side=item.sideOfRoad||'Both Sides';
 
-    let instruction = `Need all utilities located at ${workArea} across roadway panels, curb line, sidewalk, and adjacent right-of-way areas.`;
+    let instruction='Need all utilities located at '+workArea+' across roadway panels, curb line, sidewalk, and adjacent right-of-way areas.';
 
-    if(side === 'Across Street'){
-      instruction = `Need all utilities located at ${workArea} across both sides of roadway panels, curb line, sidewalk, and adjacent right-of-way areas.`;
+    if(side==='Across Street'){
+      instruction='Need all utilities located at '+workArea+' across both sides of roadway panels, curb line, sidewalk, and adjacent right-of-way areas.';
     }
 
-    instruction += ' We will be injecting polyurethane foam beneath the roadway to level and stabilize concrete.';
+    instruction+=' We will be injecting polyurethane foam beneath the roadway to level and stabilize concrete.';
 
-    let gpsText = 'GPS needs review.';
+    let gpsText='GPS needs review.';
 
-    if(startGps && endGps && startGps !== endGps){
-      gpsText = `START GPS: ${startGps}
-END GPS: ${endGps}`;
+    if(startGps&&endGps&&startGps!==endGps){
+      gpsText='START GPS: '+startGps+'
+END GPS: '+endGps;
     }else if(startGps){
-      gpsText = `GPS POINT: ${startGps}`;
+      gpsText='GPS POINT: '+startGps;
     }
 
-    return `${index+1}. WORK AREA
-${workArea}
+    return (
+      (index+1)+'. WORK AREA
+'+
+      workArea+'
 
-NEAREST INTERSECTION
-${intersection}
+'+
+      'NEAREST INTERSECTION
+'+
+      intersection+'
 
-WORK SITE LOCATE INSTRUCTIONS
-${instruction}
+'+
+      'WORK SITE LOCATE INSTRUCTIONS
+'+
+      instruction+'
 
-SUPPORTING GPS
-${gpsText}
-${bufferFeet} ft locate buffer included before and after work limits.`;
+'+
+      'SUPPORTING GPS
+'+
+      gpsText+'
+'+
+      bufferFeet+' ft locate buffer included before and after work limits.'
+    );
   }).join('
 
 --------------------------------
 
 ');
 
-  return `TEXAS811 LOCATE REQUEST
+  return (
+    'TEXAS811 LOCATE REQUEST
 
-CITY: ${city}
-COUNTY: ${county}
-WORK FOR: ${workFor}
-ZONE: ${zone}
+'+
+    'CITY: '+city+'
+'+
+    'COUNTY: '+county+'
+'+
+    'WORK FOR: '+workFor+'
+'+
+    'ZONE: '+zone+'
 
-${sections}`;
+'+
+    sections
+  );
 }
 
 function generateLocateForSelectedZone(){
