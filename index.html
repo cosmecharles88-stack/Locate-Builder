@@ -47,7 +47,7 @@
     }
 
     main {
-      width: min(1200px, calc(100% - 24px));
+      width: min(1300px, calc(100% - 24px));
       margin: 18px auto 60px;
     }
 
@@ -59,6 +59,7 @@
 
     @media (min-width: 980px) {
       .grid-2 { grid-template-columns: 1fr 1fr; }
+      .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
     }
 
     .card {
@@ -104,6 +105,8 @@
       line-height: 1.4;
     }
 
+    .small-textarea { min-height: 110px; }
+
     .row {
       display: grid;
       grid-template-columns: 1fr;
@@ -113,6 +116,7 @@
     @media (min-width: 760px) {
       .row-2 { grid-template-columns: 1fr 1fr; }
       .row-3 { grid-template-columns: 1fr 1fr 1fr; }
+      .row-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
     }
 
     .btn-row {
@@ -184,6 +188,9 @@
 
     tr:last-child td { border-bottom: none; }
 
+    td input { min-width: 150px; }
+    td textarea { min-height: 70px; min-width: 220px; }
+
     .status {
       font-weight: 800;
       font-size: 12px;
@@ -200,7 +207,7 @@
       color: #e5e7eb;
       border-radius: 14px;
       padding: 14px;
-      min-height: 180px;
+      min-height: 260px;
       line-height: 1.45;
       font-family: Consolas, Monaco, monospace;
       font-size: 13px;
@@ -219,19 +226,21 @@
       margin-top: 12px;
       line-height: 1.45;
     }
+
+    .scroll-wrap { overflow-x: auto; }
   </style>
 </head>
 <body>
   <header>
     <h1>KKE Locate Builder</h1>
-    <p>PDF estimate intake → work location extraction → review table → 811 locate wording</p>
+    <p>Estimate intake → work location extraction → Texas811 fields → GPS-ready locate wording</p>
   </header>
 
   <main class="grid">
     <section class="card">
-      <h2>1. Project Setup</h2>
-      <p class="subtext">Start with project details. In this MVP, paste text from the estimate PDF. Later we can connect this to a PDF parser and AI extraction.</p>
-      <div class="row row-3">
+      <h2>1. Texas811 Project Setup</h2>
+      <p class="subtext">These fields match the information Texas811 commonly asks for. The app uses them to generate copy-ready ticket text.</p>
+      <div class="row row-4">
         <div>
           <label for="projectName">Project Name</label>
           <input id="projectName" value="Tribute Water Ponding" />
@@ -241,26 +250,75 @@
           <input id="city" value="The Colony" />
         </div>
         <div>
+          <label for="county">County</label>
+          <input id="county" value="Denton" />
+        </div>
+        <div>
           <label for="poNumber">PO / Reference</label>
           <input id="poNumber" value="26-05721" />
         </div>
       </div>
-      <div class="row row-3">
+
+      <div class="row row-4">
         <div>
-          <label for="workType">Work Type</label>
-          <select id="workType">
-            <option>Polyurethane concrete stabilization</option>
-            <option>Polyurethane lifting and leveling</option>
-            <option>Deep injection and slab stabilization</option>
+          <label for="ticketType">Ticket Type</label>
+          <select id="ticketType">
+            <option>Normal</option>
+            <option>Update</option>
+            <option>Remark</option>
+            <option>Emergency</option>
           </select>
         </div>
         <div>
+          <label for="natureOfWork">Nature of Work</label>
+          <select id="natureOfWork">
+            <option>Polyurethane concrete stabilization</option>
+            <option>Polyurethane lifting and leveling</option>
+            <option>Deep injection and slab stabilization</option>
+            <option>Roadway maintenance</option>
+          </select>
+        </div>
+        <div>
+          <label for="workDoneFor">Work Done For</label>
+          <input id="workDoneFor" value="The City of The Colony" />
+        </div>
+        <div>
+          <label for="duration">How Long Will It Take?</label>
+          <input id="duration" value="1-2 days per locate zone" />
+        </div>
+      </div>
+
+      <div class="row row-4">
+        <div>
+          <label for="explosives">Explosives</label>
+          <select id="explosives"><option>No</option><option>Yes</option></select>
+        </div>
+        <div>
+          <label for="whiteLined">White Lined</label>
+          <select id="whiteLined"><option>No</option><option>Yes</option><option>Not required / map provided</option></select>
+        </div>
+        <div>
+          <label for="directionalDrilling">Directional Drilling</label>
+          <select id="directionalDrilling"><option>No</option><option>Yes</option></select>
+        </div>
+        <div>
+          <label for="deeperThan16">Deeper Than 16 Inches</label>
+          <select id="deeperThan16"><option>Yes - deep injection areas may reach approx. 4 ft</option><option>No</option><option>Varies by location</option></select>
+        </div>
+      </div>
+
+      <div class="row row-3">
+        <div>
           <label for="defaultLane">Default Locate Area</label>
-          <input id="defaultLane" value="roadway and adjacent sidewalk/right-of-way areas within the described work limits" />
+          <input id="defaultLane" value="roadway panels, curb line, adjacent sidewalk, and right-of-way areas within the described work limits" />
         </div>
         <div>
           <label for="startDate">Planned Start Date</label>
           <input id="startDate" type="date" />
+        </div>
+        <div>
+          <label for="nearestMajorRoad">Major Road / Starting Reference</label>
+          <input id="nearestMajorRoad" value="Main Street" />
         </div>
       </div>
     </section>
@@ -268,390 +326,6 @@
     <section class="grid grid-2">
       <div class="card">
         <h2>2. Estimate Text Intake</h2>
-        <p class="subtext">Paste the extracted estimate text here. The parser looks for "Job Location" lines, dimensions, settlement depths, DI/Method type, and notes like holding water or ADA.</p>
+        <p class="subtext">Paste the extracted estimate text here. This version also looks for GPS coordinates when they are included in quotes or notes.</p>
         <textarea id="estimateText" placeholder="Paste estimate text here..."></textarea>
         <div class="btn-row">
-          <button onclick="parseEstimate()">Extract Work Locations</button>
-          <button class="btn-secondary" onclick="loadTributeExample()">Load Tribute Example</button>
-          <button class="btn-secondary" onclick="clearAll()">Clear</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>3. Quick Summary</h2>
-        <div id="summary" class="empty">No locations extracted yet.</div>
-        <p class="footer-note">This is a rules-based MVP parser. The production version should use AI extraction so it can handle messy PDFs, misspellings, and scanned estimates.</p>
-      </div>
-    </section>
-
-    <section class="card">
-      <h2>4. Review Extracted Locations</h2>
-      <p class="subtext">Edit the rows before creating locate wording. The "Zone" field controls how tickets can be grouped.</p>
-      <div id="locationsTable" class="empty">No locations extracted yet.</div>
-      <div class="btn-row">
-        <button onclick="addManualRow()">Add Manual Location</button>
-        <button onclick="autoAssignZones()">Auto-Assign Zones</button>
-        <button class="btn-secondary" onclick="downloadCsv()">Download CSV</button>
-      </div>
-    </section>
-
-    <section class="grid grid-2">
-      <div class="card">
-        <h2>5. Generate 811 Locate Wording</h2>
-        <p class="subtext">Select a zone or generate wording for all zones. Copy/paste this into the 811 ticket notes.</p>
-        <label for="zoneSelect">Zone</label>
-        <select id="zoneSelect"></select>
-        <div class="btn-row">
-          <button onclick="generateLocateForSelectedZone()">Generate Selected Zone</button>
-          <button class="btn-secondary" onclick="generateAllZones()">Generate All Zones</button>
-          <button class="btn-secondary" onclick="copyLocateText()">Copy Text</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Locate Text Output</h2>
-        <div id="locateOutput" class="locate-output">Locate wording will appear here.</div>
-      </div>
-    </section>
-  </main>
-
-  <script>
-    let locations = [];
-
-    const sampleText = `
-Lifting & Leveling Job Location-8353-8337 Burnley and across the Street Holding water (METHOD INJECTION ONLY)
-There are 4 total areas that will be worked. The first is at 8349 Burnley. The second area is at 8341 Burnley. The third area is across the street from 8349 Burnley. The fourth location is a mismatched joint that runs across the road.
-60x8' 2" 40'x8' 1 1/2" 60'x8' 2" 24'x6' 2"
-Deep Injection Job Location-8353-8337 Burnley and across the Street Holding water (DI INJECTION ONLY)
-80 TUBES FOR DI
-Lifting & Leveling Job Location-2920 Prescott (METHOD INJECTION ONLY)
-This location is 65'x8' with a settlement of 2 1/4" and there is water ponding at the curb line.
-Deep Injection Job Location-2920 Prescott (DI INJECTION ONLY)
-30 TUBES FOR DI
-Lifting & Leveling Job Location-8155 Wakefield through 8163 Wakefield (METHOD INJECTION ONLY)
-This location has two areas that need to be worked that are holding water. 30'x8' 1 1/4" 65'x8' 2 3/4"
-Deep Injection Job Location-8155 Wakefield through 8163 Wakefield (DI INJECTION ONLY)
-47 TUBES FOR DI
-Lifting & Leveling Job Location Broughton at Telford (METHOD INJECTION ONLY)
-This location is 45'x6' with a settlement of 1 1/2".
-Deep Injection Job Location- Broughton at Telford (DI INJECTION ONLY)
-Lifting & Leveling Job Location 3421 Kirkfield (METHOD INJECTION ONLY)
-This location is 40'x6'' with a settlement of 1".
-Deep Injection Job Location- 3421 Kirkfield (DI INJECTION ONLY)
-Lifting & Leveling Job Location 8237 Bonny Bank (METHOD INJECTION ONLY)
-This location is 75'x9' with a settlement of 2 1/2".
-Deep Injection Job Location- 8237 Bonny Bank (DI INJECTION ONLY)
-Lifting & Leveling Job Location- Bonny Bank at Lindsay Gardens (METHOD INJECTION ONLY)
-This location has 3 separate work areas. Bonny Bank at Lindsay Gardens-48'x25' 5" settlement ADA- with a settlement of 6" 80'x25' sidewalk 75'x15' with a settlement of 5"to 6"
-Deep Injection Job Location- Bonny Bank at Lindsay Gardens (DI INJECTION ONLY)
-Lifting & Leveling Job Location-Prescott at Burnley (METHOD INJECTION ONLY)
-This location has two areas that need to be lifted. The first location is 30'x15' with a settlement of 1 1/2". The second area is 50'x6' with a settlement of 1 3/4".
-Deep Injection Job Location-Prescott at Burnley (DI INJECTION ONLY)
-Lifting & Leveling Job Location-Prescott at Wembley (METHOD INJECTION ONLY)
-This location has three areas that need to be lifted. The first location is 114x8' with a settlement of 1 1/2". The second area is 50'x8' with a settlement of 3". The third location is 70'x8' with a settlement of 2 1/2" Between 3036 Prescott and 8361 Wembley and across street. There is a dip across the entire road that needs to be lifted.
-Deep Injection Job Location-Prescott at Wembley (DI INJECTION ONLY)
-Lifting & Leveling Job Location-3745 Birmington and acroos street at 3748 Birmington (METHOD INJECTION ONLY)
-This location has three areas that need to be lifted. The first location is 45x9' with a settlement of 1". The second area is 21'x12' with a settlement of 2" in the crown of road. The third location is 50'x9' with a settlement of 2".
-Deep Injection Job Location-3745 Birmington and acroos street at 3748 Birmington (DI INJECTION ONLY)
-Lifting & Leveling Job Location-2921 Darcy (METHOD INJECTION ONLY)
-This location has two areas that need to be worked. The first area is 20'x9' with a settlement of 1" and the second area is 100'x9' with a settlement of 2 1/2".
-Deep Injection Job Location-2921 Darcy (DI INJECTION ONLY)
-`;
-
-    function loadTributeExample() {
-      document.getElementById('estimateText').value = sampleText.trim();
-      parseEstimate();
-    }
-
-    function clearAll() {
-      locations = [];
-      document.getElementById('estimateText').value = '';
-      renderLocations();
-      renderSummary();
-      updateZoneSelect();
-      document.getElementById('locateOutput').textContent = 'Locate wording will appear here.';
-    }
-
-    function cleanLocationName(raw) {
-      return raw
-        .replace(/\(METHOD INJECTION ONLY\)/gi, '')
-        .replace(/\(DI INJECTION ONLY\)/gi, '')
-        .replace(/\s+/g, ' ')
-        .replace(/^[-\s]+/, '')
-        .replace(/acroos/gi, 'across')
-        .trim();
-    }
-
-    function parseEstimate() {
-      const text = document.getElementById('estimateText').value || '';
-      const lines = text.split(/\n+/).map(line => line.trim()).filter(Boolean);
-      const found = [];
-
-      lines.forEach((line, index) => {
-        const isLocationLine = /Job Location/i.test(line);
-        if (!isLocationLine) return;
-
-        const methodType = /DI INJECTION ONLY|Deep Injection/i.test(line) ? 'DI' : 'Method';
-        const afterLocation = line.split(/Job Location[-\s]*/i)[1] || line;
-        const name = cleanLocationName(afterLocation);
-        const context = [line, lines[index + 1] || '', lines[index + 2] || ''].join(' ');
-        const dimensions = extractDimensions(context);
-        const settlements = extractSettlements(context);
-        const notes = extractNotes(context);
-
-        const existing = found.find(item => normalize(item.location) === normalize(name));
-        if (existing) {
-          if (!existing.methodTypes.includes(methodType)) existing.methodTypes.push(methodType);
-          existing.dimensions = uniqueText(existing.dimensions, dimensions);
-          existing.settlement = uniqueText(existing.settlement, settlements);
-          existing.notes = uniqueText(existing.notes, notes);
-        } else {
-          found.push({
-            id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + index),
-            zone: '',
-            location: name,
-            methodTypes: [methodType],
-            dimensions,
-            settlement: settlements,
-            notes,
-            laneArea: document.getElementById('defaultLane').value,
-            ticketNumber: '',
-            status: 'Draft'
-          });
-        }
-      });
-
-      locations = found;
-      autoAssignZones(false);
-      renderLocations();
-      renderSummary();
-      updateZoneSelect();
-    }
-
-    function normalize(value) {
-      return (value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-    }
-
-    function extractDimensions(text) {
-      const matches = text.match(/\b\d+\s*x\s*\d+'?|\b\d+'\s*x\s*\d+'?/gi) || [];
-      return [...new Set(matches.map(m => m.replace(/\s+/g, '').replace(/x/i, 'x')))].join(', ');
-    }
-
-    function extractSettlements(text) {
-      const matches = text.match(/(?:settlement of\s*)?\d+\s*(?:\d\/\d)?\s*"(?:\s*to\s*\d+\s*(?:\d\/\d)?\s*")?/gi) || [];
-      return [...new Set(matches.map(m => m.replace(/settlement of\s*/i, '').trim()))].join(', ');
-    }
-
-    function extractNotes(text) {
-      const notes = [];
-      if (/holding water|ponding/i.test(text)) notes.push('holding water / ponding');
-      if (/ADA/i.test(text)) notes.push('ADA area');
-      if (/across street|across the street/i.test(text)) notes.push('includes area across street');
-      if (/mismatched joint/i.test(text)) notes.push('mismatched roadway joint');
-      if (/dip across the entire road|entire road/i.test(text)) notes.push('dip across roadway');
-      if (/crown of road/i.test(text)) notes.push('crown of road settlement');
-      return notes.join(', ');
-    }
-
-    function uniqueText(existing, added) {
-      const parts = [...(existing || '').split(', '), ...(added || '').split(', ')]
-        .map(x => x.trim())
-        .filter(Boolean);
-      return [...new Set(parts)].join(', ');
-    }
-
-    function autoAssignZones(shouldRender = true) {
-      locations = locations.map(item => {
-        const lower = item.location.toLowerCase();
-        let zone = 'Zone D - Other Work Areas';
-        if (lower.includes('burnley') || lower.includes('prescott') || lower.includes('wembley')) zone = 'Zone A - Burnley / Prescott / Wembley';
-        if (lower.includes('bonny bank') || lower.includes('lindsay')) zone = 'Zone B - Bonny Bank / Lindsay Gardens';
-        if (lower.includes('wakefield') || lower.includes('darcy')) zone = 'Zone C - Wakefield / Darcy';
-        if (lower.includes('broughton') || lower.includes('telford') || lower.includes('kirkfield') || lower.includes('birmington')) zone = 'Zone D - Broughton / Kirkfield / Birmington';
-        return { ...item, zone };
-      });
-      if (shouldRender) {
-        renderLocations();
-        renderSummary();
-        updateZoneSelect();
-      }
-    }
-
-    function renderSummary() {
-      const summary = document.getElementById('summary');
-      if (!locations.length) {
-        summary.className = 'empty';
-        summary.textContent = 'No locations extracted yet.';
-        return;
-      }
-
-      const zones = [...new Set(locations.map(x => x.zone || 'Unassigned'))];
-      const methodCount = locations.filter(x => x.methodTypes.includes('Method')).length;
-      const diCount = locations.filter(x => x.methodTypes.includes('DI')).length;
-
-      summary.className = '';
-      summary.innerHTML = `
-        <span class="pill">${locations.length} work locations</span>
-        <span class="pill">${zones.length} locate zones</span>
-        <span class="pill">${methodCount} Method areas</span>
-        <span class="pill">${diCount} DI areas</span>
-        <div class="footer-note">Recommended next step: review each row, adjust zone groupings, then generate locate wording by zone.</div>
-      `;
-    }
-
-    function renderLocations() {
-      const container = document.getElementById('locationsTable');
-      if (!locations.length) {
-        container.className = 'empty';
-        container.textContent = 'No locations extracted yet.';
-        return;
-      }
-      container.className = '';
-      container.innerHTML = `
-        <table>
-          <thead>
-            <tr>
-              <th>Zone</th>
-              <th>Location</th>
-              <th>Method</th>
-              <th>Dimensions</th>
-              <th>Settlement</th>
-              <th>Notes</th>
-              <th>Status</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            ${locations.map((item, index) => `
-              <tr>
-                <td><input value="${escapeHtml(item.zone)}" onchange="updateField(${index}, 'zone', this.value)"></td>
-                <td><input value="${escapeHtml(item.location)}" onchange="updateField(${index}, 'location', this.value)"></td>
-                <td><input value="${escapeHtml(item.methodTypes.join(' + '))}" onchange="updateMethods(${index}, this.value)"></td>
-                <td><input value="${escapeHtml(item.dimensions)}" onchange="updateField(${index}, 'dimensions', this.value)"></td>
-                <td><input value="${escapeHtml(item.settlement)}" onchange="updateField(${index}, 'settlement', this.value)"></td>
-                <td><input value="${escapeHtml(item.notes)}" onchange="updateField(${index}, 'notes', this.value)"></td>
-                <td><span class="status">${escapeHtml(item.status)}</span></td>
-                <td><button class="btn-danger" onclick="deleteRow(${index})">Remove</button></td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
-    }
-
-    function escapeHtml(value) {
-      return String(value || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
-    function updateField(index, field, value) {
-      locations[index][field] = value;
-      renderSummary();
-      updateZoneSelect();
-    }
-
-    function updateMethods(index, value) {
-      locations[index].methodTypes = value.split('+').map(x => x.trim()).filter(Boolean);
-      renderSummary();
-    }
-
-    function deleteRow(index) {
-      locations.splice(index, 1);
-      renderLocations();
-      renderSummary();
-      updateZoneSelect();
-    }
-
-    function addManualRow() {
-      locations.push({
-        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-        zone: 'Unassigned',
-        location: '',
-        methodTypes: ['Method'],
-        dimensions: '',
-        settlement: '',
-        notes: '',
-        laneArea: document.getElementById('defaultLane').value,
-        ticketNumber: '',
-        status: 'Draft'
-      });
-      renderLocations();
-      renderSummary();
-      updateZoneSelect();
-    }
-
-    function updateZoneSelect() {
-      const select = document.getElementById('zoneSelect');
-      const zones = [...new Set(locations.map(x => x.zone || 'Unassigned'))];
-      select.innerHTML = zones.map(zone => `<option value="${escapeHtml(zone)}">${escapeHtml(zone)}</option>`).join('');
-    }
-
-    function generateLocateForSelectedZone() {
-      const zone = document.getElementById('zoneSelect').value;
-      const zoneItems = locations.filter(x => (x.zone || 'Unassigned') === zone);
-      document.getElementById('locateOutput').textContent = buildLocateText(zone, zoneItems);
-    }
-
-    function generateAllZones() {
-      const zones = [...new Set(locations.map(x => x.zone || 'Unassigned'))];
-      const output = zones.map(zone => buildLocateText(zone, locations.filter(x => (x.zone || 'Unassigned') === zone))).join('\n\n------------------------------------------------------------\n\n');
-      document.getElementById('locateOutput').textContent = output || 'No zones available.';
-    }
-
-    function buildLocateText(zone, items) {
-      const projectName = document.getElementById('projectName').value || 'KKE Project';
-      const city = document.getElementById('city').value || '';
-      const poNumber = document.getElementById('poNumber').value || '';
-      const workType = document.getElementById('workType').value || 'polyurethane concrete stabilization';
-      const defaultLane = document.getElementById('defaultLane').value || 'roadway and adjacent sidewalk/right-of-way areas within the described work limits';
-      const startDate = document.getElementById('startDate').value;
-
-      const locationLines = items.map((item, index) => {
-        const method = item.methodTypes.join(' + ');
-        const detailParts = [];
-        if (item.dimensions) detailParts.push(`Approx. dimensions: ${item.dimensions}`);
-        if (item.settlement) detailParts.push(`Settlement: ${item.settlement}`);
-        if (item.notes) detailParts.push(`Notes: ${item.notes}`);
-        return `${index + 1}. ${item.location} — ${method}${detailParts.length ? `\n   ${detailParts.join(' | ')}` : ''}`;
-      }).join('\n');
-
-      return `811 LOCATE REQUEST DRAFT\n\nProject: ${projectName}\nCity: ${city}\nReference / PO: ${poNumber}\nLocate Zone: ${zone}\n${startDate ? `Planned Start Date: ${startDate}\n` : ''}\nWork Type: ${workType}\n\nNeed all utilities located within the ${defaultLane}.\n\nKKE Concrete Lifting will be performing polyurethane concrete lifting, leveling, and stabilization. Work includes drilling 5/8-inch holes through concrete roadway and/or sidewalk panels and injecting high-density polyurethane foam beneath the slab. Some areas may include deep injection tubing to stabilize weak subgrade soils below the concrete.\n\nWork locations included in this locate zone:\n${locationLines}\n\nPlease mark all public and private utilities within and immediately adjacent to these work limits, including roadway panels, curb line, sidewalk areas, parkway/right-of-way areas, and any area that may be affected by drilling or polyurethane injection.\n\nNotes for locator:\n- Work is spot repair / slab stabilization, not open trench excavation.\n- Drilling is through existing concrete panels.\n- Please include both sides of the roadway where the description states across street or across roadway.\n- If limits are unclear, contact KKE before marking incomplete areas.`;
-    }
-
-    function copyLocateText() {
-      const text = document.getElementById('locateOutput').textContent;
-      navigator.clipboard.writeText(text).then(() => {
-        alert('Locate text copied.');
-      }).catch(() => {
-        alert('Copy failed. You can manually select and copy the text.');
-      });
-    }
-
-    function downloadCsv() {
-      if (!locations.length) return alert('No locations to download.');
-      const headers = ['Zone', 'Location', 'Method Types', 'Dimensions', 'Settlement', 'Notes', 'Status'];
-      const rows = locations.map(item => [
-        item.zone,
-        item.location,
-        item.methodTypes.join(' + '),
-        item.dimensions,
-        item.settlement,
-        item.notes,
-        item.status
-      ]);
-      const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell || '').replace(/"/g, '""')}"`).join(',')).join('\n');
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'kke-locate-builder-locations.csv';
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-  </script>
-</body>
-</html>
