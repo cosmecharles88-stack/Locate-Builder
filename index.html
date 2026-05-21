@@ -35,10 +35,27 @@ header{
   text-align:center;
   border-bottom:4px solid #dbeafe;
 }
-header h1{margin:0 0 8px;font-size:32px;letter-spacing:.02em}
-header p{margin:0 auto;color:#dbeafe;font-size:15px;max-width:850px;line-height:1.45}
-main{width:min(1380px,calc(100% - 28px));margin:20px auto 70px}
-.grid{display:grid;grid-template-columns:1fr;gap:18px}
+header h1{
+  margin:0 0 8px;
+  font-size:32px;
+  letter-spacing:.02em;
+}
+header p{
+  margin:0 auto;
+  color:#dbeafe;
+  font-size:15px;
+  max-width:850px;
+  line-height:1.45;
+}
+main{
+  width:min(1380px,calc(100% - 28px));
+  margin:20px auto 70px;
+}
+.grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:18px;
+}
 @media(min-width:980px){.grid-2{grid-template-columns:1fr 1fr}}
 .card{
   background:var(--card);
@@ -63,8 +80,18 @@ main{width:min(1380px,calc(100% - 28px));margin:20px auto 70px}
   background:var(--kke-blue);
   display:inline-block;
 }
-.subtext,.footer-note{color:var(--muted);font-size:13px;line-height:1.5}
-label{display:block;font-weight:700;margin:13px 0 6px;font-size:13px;color:#374151}
+.subtext,.footer-note{
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.5;
+}
+label{
+  display:block;
+  font-weight:700;
+  margin:13px 0 6px;
+  font-size:13px;
+  color:#374151;
+}
 input,textarea,select{
   width:100%;
   border:1px solid var(--border);
@@ -79,11 +106,24 @@ input:focus,textarea:focus,select:focus{
   border-color:var(--kke-blue);
   box-shadow:0 0 0 3px rgba(0,87,168,.12);
 }
-textarea{min-height:220px;resize:vertical;line-height:1.45}
+textarea{
+  min-height:220px;
+  resize:vertical;
+  line-height:1.45;
+}
 .small-textarea{min-height:105px}
-.row{display:grid;grid-template-columns:1fr;gap:12px}
+.row{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:12px;
+}
 @media(min-width:760px){.row-4{grid-template-columns:repeat(4,1fr)}}
-.btn-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.btn-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:16px;
+}
 button{
   border:none;
   border-radius:999px;
@@ -93,10 +133,19 @@ button{
   background:var(--kke-blue);
   color:#fff;
   box-shadow:0 8px 18px rgba(0,87,168,.18);
+  transition:transform .08s ease,background .15s ease,box-shadow .15s ease;
 }
-button:hover{background:var(--kke-dark-blue)}
-.btn-secondary{background:#e5e7eb;color:var(--text);box-shadow:none}
-.btn-secondary:hover{background:#d1d5db}
+button:hover{
+  background:var(--kke-dark-blue);
+  box-shadow:0 10px 22px rgba(0,87,168,.24);
+}
+button:active{transform:scale(.98)}
+.btn-secondary{
+  background:#e5e7eb;
+  color:var(--text);
+  box-shadow:none;
+}
+.btn-secondary:hover{background:#d1d5db;box-shadow:none}
 .btn-danger{background:var(--danger);box-shadow:none}
 .pill{
   display:inline-flex;
@@ -110,13 +159,46 @@ button:hover{background:var(--kke-dark-blue)}
   margin:4px 6px 4px 0;
   border:1px solid #bfdbfe;
 }
-.scroll-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:14px;background:#fff}
-table{width:100%;border-collapse:collapse;margin:0}
-th,td{border-bottom:1px solid var(--border);padding:10px;text-align:left;vertical-align:top;font-size:13px}
-th{position:sticky;top:0;z-index:1;background:#eef6ff;color:var(--kke-dark-blue);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.scroll-wrap{
+  overflow-x:auto;
+  border:1px solid var(--border);
+  border-radius:14px;
+  background:#fff;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:0;
+}
+th,td{
+  border-bottom:1px solid var(--border);
+  padding:10px;
+  text-align:left;
+  vertical-align:top;
+  font-size:13px;
+}
+th{
+  position:sticky;
+  top:0;
+  z-index:1;
+  background:#eef6ff;
+  color:var(--kke-dark-blue);
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
 tr:last-child td{border-bottom:none}
 td input{min-width:150px}
-.status{font-weight:800;font-size:12px;border-radius:999px;padding:5px 9px;display:inline-block;background:#fef3c7;color:var(--warning);white-space:nowrap}
+.status{
+  font-weight:800;
+  font-size:12px;
+  border-radius:999px;
+  padding:5px 9px;
+  display:inline-block;
+  background:#fef3c7;
+  color:var(--warning);
+  white-space:nowrap;
+}
 .gps-ok{background:#dcfce7;color:var(--success)}
 .locate-output{
   white-space:pre-wrap;
@@ -130,115 +212,49 @@ td input{min-width:150px}
   font-size:12px;
   overflow-x:auto;
 }
-.empty{color:var(--muted);font-style:italic;padding:14px;background:#f9fafb;border:1px dashed var(--border);border-radius:14px}
+.empty{
+  color:var(--muted);
+  font-style:italic;
+  padding:14px;
+  background:#f9fafb;
+  border:1px dashed var(--border);
+  border-radius:14px;
+}
 #locationsTable.empty{margin-top:10px}
-#copyStatus{background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:10px 12px}
+#copyStatus{
+  background:#f8fafc;
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px 12px;
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
-<header>
-  <h1>KKE Locate Builder</h1>
-  <p>Estimate intake → clean work limits → buffered GPS → Texas811-ready wording</p>
-</header>
-
+<header><h1>KKE Locate Builder</h1><p>Estimate intake → clean locator language → GPS support → Texas811-ready wording</p></header>
 <main class="grid">
-  <section class="card">
-    <h2>1. Texas811 Project Setup</h2>
-    <div class="row row-4">
-      <div><label for="projectName">Project Name</label><input id="projectName" value="Tribute Water Ponding"></div>
-      <div><label for="city">City</label><input id="city" value="The Colony"></div>
-      <div><label for="county">County</label><input id="county" value="Denton"></div>
-      <div><label for="poNumber">PO / Reference</label><input id="poNumber" value="26-05721"></div>
-    </div>
-    <div class="row row-4">
-      <div><label for="ticketType">Ticket Type</label><select id="ticketType"><option>Normal</option><option>Update</option><option>Remark</option><option>Emergency</option></select></div>
-      <div><label for="natureOfWork">Nature of Work</label><select id="natureOfWork"><option>Concrete lifting and stabilization</option><option>Polyurethane concrete stabilization</option><option>Roadway maintenance</option></select></div>
-      <div><label for="workDoneFor">Work Done For</label><input id="workDoneFor" value="The City of The Colony"></div>
-      <div><label for="duration">How Long Will It Take?</label><input id="duration" value="1-2 days per locate zone"></div>
-    </div>
-    <div class="row row-4">
-      <div><label for="explosives">Explosives</label><select id="explosives"><option>No</option><option>Yes</option></select></div>
-      <div><label for="whiteLined">White Lined</label><select id="whiteLined"><option>No</option><option>Yes</option><option>Not required / map provided</option></select></div>
-      <div><label for="directionalDrilling">Directional Drilling</label><select id="directionalDrilling"><option>No</option><option>Yes</option></select></div>
-      <div><label for="deeperThan16">Deeper Than 16 Inches</label><select id="deeperThan16"><option>Yes - DI may reach approx. 4 ft</option><option>No</option><option>Varies by location</option></select></div>
-    </div>
-    <div class="row row-4">
-      <div><label for="defaultLane">Default Locate Area</label><input id="defaultLane" value="roadway panels, curb line, adjacent sidewalk, and right-of-way areas within the described limits"></div>
-      <div><label for="startDate">Planned Start Date</label><input id="startDate" type="date"></div>
-      <div><label for="nearestMajorRoad">Major Road / Starting Reference</label><input id="nearestMajorRoad" value="Main Street"></div>
-      <div><label for="locateBuffer">Locate Buffer (ft)</label><input id="locateBuffer" type="number" value="20" min="0"></div>
-    </div>
-    <div class="row row-4">
-      <div><label for="googleApiKey">Google Maps API Key</label><input id="googleApiKey" type="password" placeholder="Paste key here to generate GPS"></div>
-    </div>
-  </section>
-
-  <section class="grid grid-2">
-    <div class="card">
-      <h2>2. Estimate Text Intake</h2>
-      <p class="subtext">Upload a PDF estimate or paste estimate text below.</p>
-      <label for="pdfUpload">Upload PDF Estimate</label>
-      <input id="pdfUpload" type="file" accept="application/pdf">
-      <textarea id="estimateText" placeholder="Paste estimate text here..."></textarea>
-      <div class="btn-row">
-        <button id="extractBtn">Extract Work Locations</button>
-        <button class="btn-secondary" id="sampleBtn">Load Tribute Example</button>
-        <button class="btn-secondary" id="saveBtn">Save Project</button>
-        <button class="btn-secondary" id="loadBtn">Load Project</button>
-        <button class="btn-secondary" id="clearBtn">Clear</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>3. Quick Summary</h2>
-      <div id="summary" class="empty">No locations extracted yet.</div>
-      <label for="globalDirections">Default Driving Directions Starter</label>
-      <textarea id="globalDirections" class="small-textarea">From the nearest major roadway, travel to the listed work street/intersection. Locate limits are defined by the BEGIN LOCATE and END LOCATE GPS coordinates below.</textarea>
-      <label>GPS Diagnostic Log</label>
-      <div id="gpsDebug" class="locate-output">No GPS attempt yet.</div>
-    </div>
-  </section>
-
-  <section class="card">
-    <h2>4. Review Extracted Locations</h2>
-    <p class="subtext">Generate GPS after extraction. Review rows before submitting.</p>
-    <div id="locationsTable" class="empty">No locations extracted yet.</div>
-    <div class="btn-row">
-      <button id="manualBtn">Add Manual Location</button>
-      <button id="zoneBtn">Auto-Assign Zones</button>
-      <button id="gpsBtn">Generate GPS Coordinates</button>
-      <button class="btn-secondary" id="intersectionBtn">Auto-Find Intersections</button>
-      <button class="btn-secondary" id="routeBtn">Generate Route Directions</button>
-      <button class="btn-secondary" id="csvBtn">Download CSV</button>
-    </div>
-  </section>
-
-  <section class="card">
-    <h2>5. Generate Texas811 Locate Packet</h2>
-    <p class="subtext">Generates short locator-facing text only. No pricing or internal estimate details.</p>
-    <label for="zoneSelect">Zone</label>
-    <select id="zoneSelect"></select>
-    <div class="btn-row">
-      <button id="genSelectedBtn">Generate Selected Zone</button>
-      <button class="btn-secondary" id="genAllBtn">Generate All Zones</button>
-      <button class="btn-secondary" id="copyBtn">Copy Locate Text</button>
-      <button class="btn-secondary" id="appCheckBtn">Run App Check</button>
-    </div>
-    <p id="copyStatus" class="footer-note">No locate text generated yet.</p>
-    <label for="locatePreview">Generated Locate Text</label>
-    <div id="locatePreview" class="locate-output">Generated locate text will appear here.</div>
-  </section>
+<section class="card">
+<h2>1. Texas811 Project Setup</h2>
+<div class="row row-4"><div><label for="projectName">Project Name</label><input id="projectName" value="Tribute Water Ponding"></div><div><label for="city">City</label><input id="city" value="The Colony"></div><div><label for="county">County</label><input id="county" value="Denton"></div><div><label for="poNumber">PO / Reference</label><input id="poNumber" value="26-05721"></div></div>
+<div class="row row-4"><div><label for="ticketType">Ticket Type</label><select id="ticketType"><option>Normal</option><option>Update</option><option>Remark</option><option>Emergency</option></select></div><div><label for="natureOfWork">Nature of Work</label><select id="natureOfWork"><option>Concrete lifting and stabilization</option><option>Polyurethane concrete stabilization</option><option>Roadway maintenance</option></select></div><div><label for="workDoneFor">Work Done For</label><input id="workDoneFor" value="The City of The Colony"></div><div><label for="duration">How Long Will It Take?</label><input id="duration" value="1-2 days per locate zone"></div></div>
+<div class="row row-4"><div><label for="explosives">Explosives</label><select id="explosives"><option>No</option><option>Yes</option></select></div><div><label for="whiteLined">White Lined</label><select id="whiteLined"><option>No</option><option>Yes</option><option>Not required / map provided</option></select></div><div><label for="directionalDrilling">Directional Drilling</label><select id="directionalDrilling"><option>No</option><option>Yes</option></select></div><div><label for="deeperThan16">Deeper Than 16 Inches</label><select id="deeperThan16"><option>Yes - DI may reach approx. 4 ft</option><option>No</option><option>Varies by location</option></select></div></div>
+<div class="row row-4"><div><label for="defaultLane">Default Locate Area</label><input id="defaultLane" value="roadway panels, curb line, adjacent sidewalk, and right-of-way areas within the described limits"></div><div><label for="startDate">Planned Start Date</label><input id="startDate" type="date"></div><div><label for="nearestMajorRoad">Major Road / Starting Reference</label><input id="nearestMajorRoad" value="Main Street"></div><div><label for="locateBuffer">Locate Buffer (ft)</label><input id="locateBuffer" type="number" value="20" min="0"></div></div>
+<div class="row row-4"><div><label for="googleApiKey">Google Maps API Key</label><input id="googleApiKey" type="password" placeholder="Paste key here to generate GPS"></div></div>
+</section>
+<section class="grid grid-2">
+<div class="card"><h2>2. Estimate Text Intake</h2><p class="subtext">Upload a PDF estimate or paste estimate text below.</p><label for="pdfUpload">Upload PDF Estimate</label><input id="pdfUpload" type="file" accept="application/pdf" onchange="handlePdfUpload(event)"><textarea id="estimateText" placeholder="Paste estimate text here..."></textarea><div class="btn-row"><button onclick="parseEstimate()">Extract Work Locations</button><button class="btn-secondary" onclick="loadTributeExample()">Load Tribute Example</button><button class="btn-secondary" onclick="saveProject()">Save Project</button><button class="btn-secondary" onclick="loadProject()">Load Project</button><button class="btn-secondary" onclick="clearAll()">Clear</button></div></div>
+<div class="card"><h2>3. Quick Summary</h2><div id="summary" class="empty">No locations extracted yet.</div><label for="globalDirections">Default Driving Directions Starter</label><textarea id="globalDirections" class="small-textarea">From the nearest major roadway, travel to the listed work street/intersection. Locate limits are defined by the BEGIN LOCATE and END LOCATE GPS coordinates below.</textarea><label>GPS Diagnostic Log</label><div id="gpsDebug" class="locate-output">No GPS attempt yet.</div></div>
+</section>
+<section class="card"><h2>4. Review Extracted Locations</h2><p class="subtext">Generate GPS after extraction. Review rows before submitting.</p><div id="locationsTable" class="empty">No locations extracted yet.</div><div class="btn-row"><button onclick="addManualRow()">Add Manual Location</button><button onclick="autoAssignZones()">Auto-Assign Zones</button><button onclick="generateCoordinatesForAll()">Generate GPS Coordinates</button><button class="btn-secondary" onclick="downloadCsv()">Download CSV</button></div></section>
+<section class="card"><h2>5. Generate Texas811 Locate Packet</h2><p class="subtext">Generates short locator-facing text only. No pricing or internal estimate details.</p><label for="zoneSelect">Zone</label><select id="zoneSelect"></select><div class="btn-row"><button onclick="generateLocateForSelectedZone()">Generate Selected Zone</button><button class="btn-secondary" onclick="generateAllZones()">Generate All Zones</button><button class="btn-secondary" onclick="copyLocateText()">Copy Locate Text</button></div><p id="copyStatus" class="footer-note">No locate text generated yet.</p>
+<label for="locatePreview">Generated Locate Text</label>
+<div id="locatePreview" class="locate-output">Generated locate text will appear here.</div>
+</section>
 </main>
-
 <script>
-'use strict';
-
-let locations = [];
-let generatedLocateText = '';
-let googleMapsLoadPromise = null;
-
-const sampleText = `Lifting & Leveling Job Location-8353-8337 Burnley and across the Street Holding water (METHOD INJECTION ONLY)
+let locations=[];window.generatedLocateText='';let googleMapsLoadPromise=null;
+const sampleText=`
+Lifting & Leveling Job Location-8353-8337 Burnley and across the Street Holding water (METHOD INJECTION ONLY)
 There are 4 total areas that will be worked. The first is at 8349 Burnley. The second area is at 8341 Burnley. The third area is across the street from 8349 Burnley. The fourth location is a mismatched joint that runs across the road.
 Deep Injection Job Location-8353-8337 Burnley and across the Street Holding water (DI INJECTION ONLY)
 Lifting & Leveling Job Location-2920 Prescott (METHOD INJECTION ONLY)
@@ -249,526 +265,254 @@ This location has two areas that need to be lifted. The first location is 30'x15
 Deep Injection Job Location-Prescott at Burnley (DI INJECTION ONLY)
 Lifting & Leveling Job Location-Prescott at Wembley (METHOD INJECTION ONLY)
 Between 3036 Prescott and 8361 Wembley and across street. There is a dip across the entire road that needs to be lifted.
-Deep Injection Job Location-Prescott at Wembley (DI INJECTION ONLY)`;
-
-function el(id){ return document.getElementById(id); }
-function val(id){ const node = el(id); return node ? node.value : ''; }
-
-function setStatus(message){
-  const node = el('copyStatus');
-  if(node) node.textContent = message;
-}
-
+Deep Injection Job Location-Prescott at Wembley (DI INJECTION ONLY)
+`;
+function $(id){return document.getElementById(id)}
+if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'}
+function getVal(id){return $(id)?$(id).value:''}
+function setCopyStatus(msg){const el=$('copyStatus');if(el)el.textContent=msg}
 function updateLocatePreview(){
-  const box = el('locatePreview');
+  const box=$('locatePreview');
   if(box){
-    box.textContent = generatedLocateText || 'Generated locate text will appear here.';
+    box.textContent=window.generatedLocateText||'Generated locate text will appear here.';
   }
 }
-
-function gpsLog(message){
-  const box = el('gpsDebug');
-  if(!box) return;
-  if(box.textContent === 'No GPS attempt yet.') box.textContent = '';
-  box.textContent += '[' + new Date().toLocaleTimeString() + '] ' + message + '\n';
-}
-
-function clearGpsLog(){
-  const box = el('gpsDebug');
-  if(box) box.textContent = '';
-}
-
-function escapeHtml(value){
-  return String(value || '')
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;')
-    .replace(/'/g,'&#039;');
-}
-
-function normalize(value){
-  return String(value || '').toLowerCase().replace(/[^a-z0-9]/g,'');
-}
-
-function uniqueText(a,b){
-  const parts = [
-    ...(a || '').split(', '),
-    ...(b || '').split(', ')
-  ].map(x => x.trim()).filter(Boolean);
-  return [...new Set(parts)].join(', ');
-}
-
-function cleanLocationName(raw){
-  let text = String(raw || '');
-
-  text = text.replace(/\(METHOD INJECTION ONLY\)/gi,'');
-  text = text.replace(/\(DI INJECTION ONLY\)/gi,'');
-  text = text.replace(/METHOD INJECTION ONLY/gi,'');
-  text = text.replace(/DI INJECTION ONLY/gi,'');
-  text = text.replace(/Deep Injection/gi,'');
-  text = text.replace(/Lifting & Leveling/gi,'');
-  text = text.replace(/acroos/gi,'across');
-
-  text = stripAfterBadPhrase(text);
-
-  text = text.replace(/and across the Street Holding water/gi,'');
-  text = text.replace(/and across the street holding water/gi,'');
-  text = text.replace(/Holding water/gi,'');
-  text = text.replace(/\s+/g,' ');
-  text = text.replace(/^[-\s]+/,'').trim();
-
-  return text;
-}
-
-function stripAfterBadPhrase(value){
-  let text = String(value || '');
-  const badPhrases = [
-    ' This location',
-    ' There are',
-    ' KKE will',
-    ' Once the concrete',
-    ' with a settlement',
-    ' and there is water',
-    ' There is a dip',
-    ' needs to be lifted',
-    ' need to be lifted'
-  ];
-
-  const lower = text.toLowerCase();
-  let cut = -1;
-
-  badPhrases.forEach(phrase => {
-    const index = lower.indexOf(phrase.toLowerCase());
-    if(index > -1 && (cut === -1 || index < cut)){
-      cut = index;
-    }
-  });
-
-  if(cut > -1) text = text.slice(0, cut);
-  return text.trim();
-}
-
-function extractDimensions(text){
-  const matches = String(text || '').match(/\b\d+\s*x\s*\d+'?/gi) || [];
-  return [...new Set(matches.map(x => x.replace(/\s+/g,'').replace(/x/i,'x')))].join(', ');
-}
-
-function extractCoordinates(text){
-  const matches = String(text || '').match(/-?\d{1,3}\.\d{4,}\s*,\s*-?\d{1,3}\.\d{4,}/g) || [];
-  return [...new Set(matches.map(x => x.replace(/\s+/g,'')))];
-}
-
-function extractNotes(text){
-  const notes = [];
-  if(/holding water|ponding/i.test(text)) notes.push('ponding');
-  if(/ADA/i.test(text)) notes.push('ADA');
-  if(/across street|across the street/i.test(text)) notes.push('across street');
-  if(/mismatched joint/i.test(text)) notes.push('mismatched joint');
-  if(/entire road|dip across/i.test(text)) notes.push('roadway dip');
-  return notes.join(', ');
-}
-
+function gpsLog(msg){const box=$('gpsDebug');if(!box)return;const ts=new Date().toLocaleTimeString();if(box.textContent==='No GPS attempt yet.')box.textContent='';box.textContent+=`[${ts}] ${msg}\n`}
+function clearGpsLog(){const box=$('gpsDebug');if(box)box.textContent=''}
+async function handlePdfUpload(e){const file=e.target.files&&e.target.files[0];if(!file)return;if(!window.pdfjsLib){alert('PDF parser failed to load.');return}try{setCopyStatus('Reading PDF...');const buffer=await file.arrayBuffer();const pdf=await pdfjsLib.getDocument({data:buffer}).promise;let text='';for(let i=1;i<=pdf.numPages;i++){const page=await pdf.getPage(i);const content=await page.getTextContent();text+=`\n\n--- PAGE ${i} ---\n`+content.items.map(item=>item.str).join(' ')}$('estimateText').value=text.trim();parseEstimate();alert(`PDF extracted. Found ${locations.length} work location(s).`)}catch(err){console.error(err);alert('PDF extraction failed. Try paste text instead.')}}
+function loadTributeExample(){$('estimateText').value=sampleText.trim();parseEstimate()}
+function clearAll(){locations=[];window.generatedLocateText='';$('estimateText').value='';renderLocations();renderSummary();updateZoneSelect();updateLocatePreview();setCopyStatus('No locate text generated yet.');clearGpsLog()}
 function extractProjectSetupFromEstimate(text){
-  const source = String(text || '').replace(/\s+/g,' ').trim();
-  if(!source) return;
+  const source=String(text||'').replace(/\s+/g,' ').trim();
+  if(!source)return;
 
-  const lower = source.toLowerCase();
-
-  const poIndex = lower.indexOf('po#');
-  if(poIndex > -1){
-    const poText = source.slice(poIndex + 3, poIndex + 25).trim().split(' ')[0];
-    if(poText) el('poNumber').value = poText;
+  const poIndex=source.toLowerCase().indexOf('po#');
+  if(poIndex>-1){
+    const poText=source.slice(poIndex+3,poIndex+25).trim().split(' ')[0];
+    if(poText)$('poNumber').value=poText;
   }
 
-  const quoteIndex = lower.indexOf('this quote is for');
-  if(quoteIndex > -1){
-    let projectText = source.slice(quoteIndex + 17, quoteIndex + 90).trim();
-    const poCut = projectText.toLowerCase().indexOf('po#');
-    if(poCut > -1) projectText = projectText.slice(0, poCut).trim();
-    if(projectText) el('projectName').value = projectText;
+  const quoteIndex=source.toLowerCase().indexOf('this quote is for');
+  if(quoteIndex>-1){
+    let projectText=source.slice(quoteIndex+17,quoteIndex+90).trim();
+    const poCut=projectText.toLowerCase().indexOf('po#');
+    if(poCut>-1)projectText=projectText.slice(0,poCut).trim();
+    if(projectText)$('projectName').value=projectText;
   }
 
-  if(lower.includes('the colony') && lower.includes('texas')){
-    el('city').value = 'The Colony';
-    el('county').value = 'Denton';
-    el('workDoneFor').value = 'The City of The Colony';
+  if(source.toLowerCase().includes('the colony')&&source.toLowerCase().includes('texas')){
+    $('city').value='The Colony';
+    $('county').value='Denton';
+    $('workDoneFor').value='The City of The Colony';
   }else{
-    const guessedCity = guessCityFromText(source);
+    const guessedCity=guessCityFromText(source);
     if(guessedCity){
-      el('city').value = guessedCity;
-      el('workDoneFor').value = 'The City of ' + guessedCity;
-      const guessedCounty = guessCountyFromCity(guessedCity);
-      if(guessedCounty) el('county').value = guessedCounty;
+      $('city').value=guessedCity;
+      $('workDoneFor').value='The City of '+guessedCity;
+      const guessedCounty=guessCountyFromCity(guessedCity);
+      if(guessedCounty)$('county').value=guessedCounty;
     }
   }
 }
 
 function guessCityFromText(source){
-  const cities = ['Frisco','Garland','Richardson','Plano','Mckinney','McKinney','Prosper','Celina','Sachse','Coppell','Highland Village','Corinth','Saginaw','Fort Worth','Dallas','The Colony'];
-  const lower = String(source || '').toLowerCase();
-
+  const cities=['Frisco','Garland','Richardson','Plano','Mckinney','McKinney','Prosper','Celina','Sachse','Coppell','Highland Village','Corinth','Saginaw','Fort Worth','Dallas'];
+  const lower=String(source||'').toLowerCase();
   for(const city of cities){
-    if(lower.includes(city.toLowerCase() + ', texas') || lower.includes(city.toLowerCase() + ' texas')){
-      return city === 'Mckinney' ? 'McKinney' : city;
-    }
+    if(lower.includes(city.toLowerCase()+', texas')||lower.includes(city.toLowerCase()+' texas'))return city;
   }
-
   return '';
 }
 
 function guessCountyFromCity(city){
-  const key = String(city || '').toLowerCase();
-  const counties = {
-    'the colony':'Denton',
-    'frisco':'Collin',
-    'garland':'Dallas',
-    'richardson':'Dallas',
-    'plano':'Collin',
-    'mckinney':'Collin',
-    'prosper':'Collin',
-    'celina':'Collin',
-    'sachse':'Dallas',
-    'coppell':'Dallas',
-    'highland village':'Denton',
-    'corinth':'Denton',
-    'saginaw':'Tarrant',
-    'fort worth':'Tarrant',
-    'dallas':'Dallas'
+  const key=String(city||'').toLowerCase();
+  const counties={
+    'the colony':'Denton','frisco':'Collin','garland':'Dallas','richardson':'Dallas','plano':'Collin','mckinney':'Collin','prosper':'Collin','celina':'Collin','sachse':'Dallas','coppell':'Dallas','highland village':'Denton','corinth':'Denton','saginaw':'Tarrant','fort worth':'Tarrant','dallas':'Dallas'
   };
-  return counties[key] || '';
+  return counties[key]||'';
 }
 
-function splitEstimateIntoLocationEntries(text){
-  const source = String(text || '').replace(/\s+/g,' ').trim();
-  const entries = [];
-  const marker = 'Job Location';
-  let searchIndex = 0;
-
-  while(true){
-    const start = source.indexOf(marker, searchIndex);
-    if(start === -1) break;
-
-    const next = source.indexOf(marker, start + marker.length);
-    const block = source.slice(start, next === -1 ? source.length : next).trim();
-    searchIndex = next === -1 ? source.length : next;
-
-    let locationText = block.slice(marker.length).trim();
-    if(locationText.startsWith('-')) locationText = locationText.slice(1).trim();
-
-    const methodCut1 = locationText.toLowerCase().indexOf('(method injection only)');
-    const methodCut2 = locationText.toLowerCase().indexOf('(di injection only)');
-    let cut = -1;
-
-    if(methodCut1 > -1) cut = methodCut1;
-    if(methodCut2 > -1 && (cut === -1 || methodCut2 < cut)) cut = methodCut2;
-    if(cut > -1) locationText = locationText.slice(0, cut).trim();
-
-    locationText = cleanLocationName(locationText);
-
-    if(locationText){
-      entries.push({ locationText, fullText:block });
-    }
-  }
-
-  return entries;
+function cleanLocationName(raw){
+  let text=String(raw||'');
+  text=text.replaceAll('(METHOD INJECTION ONLY)','');
+  text=text.replaceAll('(DI INJECTION ONLY)','');
+  text=text.replaceAll('METHOD INJECTION ONLY','');
+  text=text.replaceAll('DI INJECTION ONLY','');
+  text=text.replaceAll('Deep Injection','');
+  text=text.replaceAll('Lifting & Leveling','');
+  text=text.replaceAll('acroos','across');
+  text=text.replaceAll('Acroos','Across');
+  text=stripAfterBadPhrase(text);
+  text=text.replaceAll(' and across the Street Holding water','');
+  text=text.replaceAll(' and across the street holding water','');
+  text=text.replaceAll(' Holding water','');
+  text=text.replaceAll(' holding water','');
+  text=text.replaceAll('  ',' ');
+  return text.trim().replace(/^[- ]+/,'');
 }
 
+function stripAfterBadPhrase(value){
+  let text=String(value||'');
+  const badPhrases=[' This location',' There are',' KKE will',' Once the concrete',' with a settlement',' and there is water',' There is a dip',' needs to be lifted',' need to be lifted'];
+  let cut=-1;
+  const lower=text.toLowerCase();
+  badPhrases.forEach(function(phrase){
+    const idx=lower.indexOf(phrase.toLowerCase());
+    if(idx>-1&&(cut===-1||idx<cut))cut=idx;
+  });
+  if(cut>-1)text=text.slice(0,cut);
+  return text.trim();
+}
+
+function formatWorkAreaName(item){
+  const start=stripCityState(String(item.startPoint||''));
+  const end=stripCityState(String(item.endPoint||''));
+  const location=stripCityState(cleanLocationName(item.location||''));
+  if(start&&end&&start!==end)return start+' to '+end;
+  return start||location;
+}
+
+function stripCityState(value){
+  let text=String(value||'').trim();
+  text=text.replaceAll(', The Colony, TX','');
+  text=text.replaceAll(', TX','');
+  text=text.replaceAll('  ',' ');
+  return text.trim();
+}
+function normalize(v){return String(v||'').toLowerCase().replace(/[^a-z0-9]/g,'')}
+function extractDimensions(text){const m=String(text||'').match(/\b\d+\s*x\s*\d+'?/gi)||[];return[...new Set(m.map(x=>x.replace(/\s+/g,'').replace(/x/i,'x')))].join(', ')}
+function extractCoordinates(text){const m=String(text||'').match(/-?\d{1,3}\.\d{4,}\s*,\s*-?\d{1,3}\.\d{4,}/g)||[];return[...new Set(m.map(x=>x.replace(/\s+/g,'')))]}
+function extractNotes(text){const notes=[];if(/holding water|ponding/i.test(text))notes.push('ponding');if(/ADA/i.test(text))notes.push('ADA');if(/across street|across the street/i.test(text))notes.push('across street');if(/mismatched joint/i.test(text))notes.push('mismatched joint');if(/entire road|dip across/i.test(text))notes.push('roadway dip');return notes.join(', ')}
 function parseEstimate(){
-  const text = val('estimateText');
+  const text=$('estimateText').value||'';
   extractProjectSetupFromEstimate(text);
 
-  const entries = splitEstimateIntoLocationEntries(text);
-  const found = [];
+  const entries=splitEstimateIntoLocationEntries(text);
+  const found=[];
 
-  entries.forEach((entry,index) => {
-    const method = /DI INJECTION ONLY|Deep Injection/i.test(entry.fullText) ? 'DI' : 'Method';
-    const name = cleanLocationName(entry.locationText);
-    if(!name) return;
+  entries.forEach(function(entry,index){
+    const method=entry.fullText.toLowerCase().includes('deep injection')||entry.fullText.toLowerCase().includes('di injection only')?'DI':'Method';
+    const name=cleanLocationName(entry.locationText);
+    if(!name)return;
 
-    const context = entry.fullText;
-    const coords = extractCoordinates(context);
-    const existing = found.find(x => normalize(x.location) === normalize(name));
+    const context=entry.fullText;
+    const coords=extractCoordinates(context);
+    const existing=found.find(function(x){return normalize(x.location)===normalize(name);});
 
     if(existing){
-      if(!existing.methodTypes.includes(method)) existing.methodTypes.push(method);
-      existing.dimensions = uniqueText(existing.dimensions, extractDimensions(context));
-      existing.notes = uniqueText(existing.notes, extractNotes(context));
-      if(!existing.gpsStart && coords[0]) existing.gpsStart = coords[0];
-      if(!existing.gpsEnd && coords[1]) existing.gpsEnd = coords[1];
+      if(!existing.methodTypes.includes(method))existing.methodTypes.push(method);
+      existing.dimensions=uniqueText(existing.dimensions,extractDimensions(context));
+      existing.notes=uniqueText(existing.notes,extractNotes(context));
+      if(!existing.gpsStart&&coords[0])existing.gpsStart=coords[0];
+      if(!existing.gpsEnd&&coords[1])existing.gpsEnd=coords[1];
       return;
     }
 
-    const parsed = deriveStartEndFromLocation(name);
-
+    const parsed=deriveStartEndFromLocation(name);
     found.push({
-      id:String(Date.now()) + '-' + index,
+      id:Date.now()+''+index,
       zone:'',
       location:name,
-      county:val('county'),
+      county:getVal('county'),
       methodTypes:[method],
       dimensions:extractDimensions(context),
       notes:extractNotes(context),
       nearestIntersection:guessIntersection(name),
-      driveFrom:guessIntersection(name),
-      driveFromGps:'',
-      distanceToBeginFeet:'',
-      routeDirections:'',
       startPoint:parsed.start,
       endPoint:parsed.end,
       direction:inferDirectionFromText(name),
       linearFeet:estimateLfFromDimensions(extractDimensions(context)),
       locateWidth:'15 ft each side of work area',
-      sideOfRoad:/across/i.test(context) ? 'Across Street' : 'Both Sides',
-      gpsStart:coords[0] || '',
-      gpsEnd:coords[1] || '',
+      sideOfRoad:context.toLowerCase().includes('across')?'Across Street':'Both Sides',
+      gpsStart:coords[0]||'',
+      gpsEnd:coords[1]||'',
       status:'Draft'
     });
   });
 
-  locations = found;
+  locations=found;
   autoAssignZones(false);
   renderLocations();
   renderSummary();
   updateZoneSelect();
-  generatedLocateText = '';
-  updateLocatePreview();
+  window.generatedLocateText='';
+  if(typeof updateLocatePreview==='function')updateLocatePreview();
 
   if(locations.length){
-    setStatus(`Extracted ${locations.length} work location(s). Generate GPS next.`);
+    setCopyStatus(`Extracted ${locations.length} work location(s). Generate GPS next.`);
   }else{
-    setStatus('No work locations found. Check that the estimate contains Job Location lines.');
+    setCopyStatus('No work locations found. Check that the estimate contains Job Location lines.');
   }
 }
 
-function loadTributeExample(){
-  el('estimateText').value = sampleText;
-  parseEstimate();
-}
+function splitEstimateIntoLocationEntries(text){
+  const source=String(text||'')
+    .split(String.fromCharCode(10)).join(' ')
+    .split(String.fromCharCode(13)).join(' ')
+    .trim();
 
-function guessIntersection(location){
-  const clean = simplifyIntersectionText(cleanLocationName(location));
-  const lower = clean.toLowerCase();
+  const entries=[];
+  const marker='Job Location';
+  let searchIndex=0;
 
-  if(lower.includes('burnley') && lower.includes('prescott')) return 'Burnley & Prescott';
-  if(lower.includes('prescott') && lower.includes('wembley')) return 'Prescott & Wembley';
-  if(lower.includes('bonny bank') && lower.includes('lindsay')) return 'Bonny Bank & Lindsay Gardens';
-  if(lower.includes('broughton') && lower.includes('telford')) return 'Broughton & Telford';
+  while(true){
+    const start=source.indexOf(marker,searchIndex);
+    if(start===-1)break;
 
-  if(lower.includes(' at ')){
-    const parts = clean.split(/ at /i);
-    if(parts.length >= 2) return simplifyIntersectionText(parts[0].trim() + ' & ' + parts[1].trim());
+    const next=source.indexOf(marker,start+marker.length);
+    const block=source.slice(start,next===-1?source.length:next).trim();
+    searchIndex=next===-1?source.length:next;
+
+    let locationText=block.slice(marker.length).trim();
+    if(locationText.startsWith('-'))locationText=locationText.slice(1).trim();
+
+    const methodCut1=locationText.toLowerCase().indexOf('(method injection only)');
+    const methodCut2=locationText.toLowerCase().indexOf('(di injection only)');
+    let cut=-1;
+    if(methodCut1>-1)cut=methodCut1;
+    if(methodCut2>-1&&(cut===-1||methodCut2<cut))cut=methodCut2;
+    if(cut>-1)locationText=locationText.slice(0,cut).trim();
+
+    locationText=stripAfterBadPhrase(locationText);
+    locationText=cleanLocationName(locationText);
+
+    if(locationText){
+      entries.push({locationText:locationText,fullText:block});
+    }
   }
 
+  return entries;
+}
+function uniqueText(a,b){return[...(a||'').split(', '),...(b||'').split(', ')].map(x=>x.trim()).filter(Boolean).filter((v,i,arr)=>arr.indexOf(v)===i).join(', ')}
+function guessIntersection(loc){
+  const clean=simplifyIntersectionText(cleanLocationName(loc));
+  const l=String(clean||'').toLowerCase();
+  if(l.includes('burnley')&&l.includes('prescott'))return'Burnley & Prescott';
+  if(l.includes('prescott')&&l.includes('wembley'))return'Prescott & Wembley';
+  if(l.includes('bonny bank')&&l.includes('lindsay'))return'Bonny Bank & Lindsay Gardens';
+  if(l.includes('broughton')&&l.includes('telford'))return'Broughton & Telford';
+  if(l.includes(' at ')){
+    const parts=clean.split(' at ');
+    if(parts.length>=2)return simplifyIntersectionText(parts[0].trim()+' & '+parts[1].trim());
+  }
   if(isUsableIntersection(clean)){
     return simplifyIntersectionText(clean);
   }
-
-  return '';
+  return'';
 }
-
-function deriveStartEndFromLocation(location){
-  const city = val('city') || '';
-  const state = 'TX';
-  const text = cleanLocationName(location);
-
-  let m = text.match(/(\d{3,6})\s*[-–]\s*(\d{3,6})\s+([A-Za-z ]+)/i);
-  if(m){
-    return {
-      start:`${m[1]} ${m[3].trim()}, ${city}, ${state}`,
-      end:`${m[2]} ${m[3].trim()}, ${city}, ${state}`
-    };
-  }
-
-  m = text.match(/(\d{3,6})\s+([A-Za-z ]+)\s+through\s+(\d{3,6})\s+([A-Za-z ]+)/i);
-  if(m){
-    return {
-      start:`${m[1]} ${m[2].trim()}, ${city}, ${state}`,
-      end:`${m[3]} ${m[4].trim()}, ${city}, ${state}`
-    };
-  }
-
-  m = text.match(/(\d{3,6})\s+([A-Za-z ]+).*?(\d{3,6})\s+([A-Za-z ]+)/i);
-  if(m){
-    return {
-      start:`${m[1]} ${m[2].trim()}, ${city}, ${state}`,
-      end:`${m[3]} ${m[4].trim()}, ${city}, ${state}`
-    };
-  }
-
-  m = text.match(/(\d{3,6})\s+([A-Za-z ]+)/);
-  if(m){
-    const addr = `${m[1]} ${m[2].trim()}, ${city}, ${state}`;
-    return {start:addr, end:addr};
-  }
-
-  const intersection = guessIntersection(text);
-  if(intersection){
-    return {
-      start:`${intersection}, ${city}, ${state}`,
-      end:`${intersection}, ${city}, ${state}`
-    };
-  }
-
-  return {
-    start:text ? `${text}, ${city}, ${state}` : '',
-    end:text ? `${text}, ${city}, ${state}` : ''
-  };
-}
-
-function inferDirectionFromText(text){
-  const lower = String(text || '').toLowerCase();
-  if(lower.includes('east')) return 'east';
-  if(lower.includes('west')) return 'west';
-  if(lower.includes('north')) return 'north';
-  if(lower.includes('south')) return 'south';
-  return '';
-}
-
-function estimateLfFromDimensions(dimensions){
-  if(!dimensions) return '';
-  const matches = [...String(dimensions).matchAll(/(\d+)\s*x\s*(\d+)/gi)];
-  if(!matches.length) return '';
-  return String(matches.reduce((sum,m) => sum + Math.max(parseInt(m[1],10), parseInt(m[2],10)), 0));
-}
-
-function parseLatLng(value){
-  const parts = String(value || '').split(',').map(x => parseFloat(x.trim()));
-  if(parts.length !== 2 || Number.isNaN(parts[0]) || Number.isNaN(parts[1])) return null;
-  return {lat:parts[0], lng:parts[1]};
-}
-
-function toRad(deg){ return deg * Math.PI / 180; }
-function toDeg(rad){ return rad * 180 / Math.PI; }
-
-function bearingDegrees(a,b){
-  const lat1 = toRad(a.lat);
-  const lat2 = toRad(b.lat);
-  const dLng = toRad(b.lng - a.lng);
-  const y = Math.sin(dLng) * Math.cos(lat2);
-  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
-  return (toDeg(Math.atan2(y,x)) + 360) % 360;
-}
-
-function cardinalFromBearing(b){
-  if(b >= 337.5 || b < 22.5) return 'north';
-  if(b < 67.5) return 'northeast';
-  if(b < 112.5) return 'east';
-  if(b < 157.5) return 'southeast';
-  if(b < 202.5) return 'south';
-  if(b < 247.5) return 'southwest';
-  if(b < 292.5) return 'west';
-  return 'northwest';
-}
-
-function offsetPoint(point,bearing,feet){
-  const meters = feet * 0.3048;
-  const earth = 6378137;
-  const angular = meters / earth;
-  const br = toRad(bearing);
-  const lat1 = toRad(point.lat);
-  const lng1 = toRad(point.lng);
-  const lat2 = Math.asin(Math.sin(lat1) * Math.cos(angular) + Math.cos(lat1) * Math.sin(angular) * Math.cos(br));
-  const lng2 = lng1 + Math.atan2(Math.sin(br) * Math.sin(angular) * Math.cos(lat1), Math.cos(angular) - Math.sin(lat1) * Math.sin(lat2));
-  return {lat:toDeg(lat2), lng:toDeg(lng2)};
-}
-
-function formatLatLng(point){
-  return point.lat.toFixed(6) + ',' + point.lng.toFixed(6);
-}
-
-function bufferedGps(startText,endText,bufferFeet){
-  const start = parseLatLng(startText);
-  const end = parseLatLng(endText);
-  if(!start || !end || !bufferFeet) return {start:startText, end:endText, ok:false};
-
-  if(Math.abs(start.lat - end.lat) < 0.000001 && Math.abs(start.lng - end.lng) < 0.000001){
-    return {start:startText, end:endText, ok:false};
-  }
-
-  const bearing = bearingDegrees(start,end);
-  return {
-    start:formatLatLng(offsetPoint(start,(bearing + 180) % 360,bufferFeet)),
-    end:formatLatLng(offsetPoint(end,bearing,bufferFeet)),
-    ok:true
-  };
-}
-
-function distanceFeet(a,b){
-  const start = parseLatLng(a);
-  const end = parseLatLng(b);
-  if(!start || !end) return '';
-
-  const R = 6371000;
-  const dLat = toRad(end.lat - start.lat);
-  const dLng = toRad(end.lng - start.lng);
-  const x = Math.sin(dLat/2) ** 2 + Math.cos(toRad(start.lat)) * Math.cos(toRad(end.lat)) * Math.sin(dLng/2) ** 2;
-  return Math.round(R * 2 * Math.atan2(Math.sqrt(x),Math.sqrt(1-x)) * 3.28084);
-}
-
-function autoAssignZones(shouldRender=true){
-  locations = locations.map(item => {
-    const lower = item.location.toLowerCase();
-    let zone = 'Zone D - Other Work Areas';
-
-    if(lower.includes('burnley') || lower.includes('prescott') || lower.includes('wembley')) zone = 'Zone A - Burnley / Prescott / Wembley';
-    if(lower.includes('bonny bank') || lower.includes('lindsay')) zone = 'Zone B - Bonny Bank / Lindsay Gardens';
-    if(lower.includes('wakefield') || lower.includes('darcy')) zone = 'Zone C - Wakefield / Darcy';
-    if(lower.includes('broughton') || lower.includes('telford') || lower.includes('kirkfield') || lower.includes('birmington')) zone = 'Zone D - Broughton / Kirkfield / Birmington';
-
-    return {...item, zone};
-  });
-
-  if(shouldRender){
-    renderLocations();
-    renderSummary();
-    updateZoneSelect();
-  }
-}
-
-function loadGoogleMaps(key){
-  if(window.google && window.google.maps && window.google.maps.Geocoder) return Promise.resolve();
-  if(googleMapsLoadPromise) return googleMapsLoadPromise;
-
-  googleMapsLoadPromise = new Promise((resolve,reject) => {
-    const cb = 'initKkeMaps_' + Date.now();
-
-    window[cb] = () => {
-      delete window[cb];
-      resolve();
-    };
-
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&callback=${cb}`;
-    script.async = true;
-    script.defer = true;
-    script.onerror = () => reject(new Error('Google Maps failed to load'));
-    document.head.appendChild(script);
-  });
-
-  return googleMapsLoadPromise;
-}
-
-function geocodeAddress(address,geocoder){
-  return new Promise(resolve => {
-    gpsLog('Geocoding: ' + address);
-
-    geocoder.geocode({address}, (results,status) => {
-      gpsLog('Google status: ' + status);
-
-      if(status !== 'OK' || !results || !results.length){
-        resolve('');
-        return;
-      }
-
-      const loc = results[0].geometry.location;
-      resolve(loc.lat().toFixed(6) + ',' + loc.lng().toFixed(6));
-    });
-  });
-}
-
-
-
+function deriveStartEndFromLocation(loc){const city=getVal('city')||'';const state='TX';const text=String(loc||'');let m=text.match(/(\d{3,6})\s*[-–]\s*(\d{3,6})\s+([A-Za-z ]+)/i);if(m)return{start:`${m[1]} ${m[3].trim()}, ${city}, ${state}`,end:`${m[2]} ${m[3].trim()}, ${city}, ${state}`};m=text.match(/(\d{3,6})\s+([A-Za-z ]+)\s+through\s+(\d{3,6})\s+([A-Za-z ]+)/i);if(m)return{start:`${m[1]} ${m[2].trim()}, ${city}, ${state}`,end:`${m[3]} ${m[4].trim()}, ${city}, ${state}`};m=text.match(/(\d{3,6})\s+([A-Za-z ]+).*?(\d{3,6})\s+([A-Za-z ]+)/i);if(m)return{start:`${m[1]} ${m[2].trim()}, ${city}, ${state}`,end:`${m[3]} ${m[4].trim()}, ${city}, ${state}`};m=text.match(/(\d{3,6})\s+([A-Za-z ]+)/);if(m){const addr=`${m[1]} ${m[2].trim()}, ${city}, ${state}`;return{start:addr,end:addr}}const inter=guessIntersection(text);if(inter)return{start:`${inter}, ${city}, ${state}`,end:`${inter}, ${city}, ${state}`};return{start:text?`${text}, ${city}, ${state}`:'',end:text?`${text}, ${city}, ${state}`:''}}
+function inferDirectionFromText(t){const l=String(t||'').toLowerCase();if(l.includes('east'))return'east';if(l.includes('west'))return'west';if(l.includes('north'))return'north';if(l.includes('south'))return'south';return''}
+function estimateLfFromDimensions(dim){if(!dim)return'';const matches=[...String(dim).matchAll(/(\d+)\s*x\s*(\d+)/gi)];if(!matches.length)return'';return String(matches.reduce((s,m)=>s+Math.max(parseInt(m[1],10),parseInt(m[2],10)),0))}
+function parseLatLng(v){const p=String(v||'').split(',').map(x=>parseFloat(x.trim()));if(p.length!==2||isNaN(p[0])||isNaN(p[1]))return null;return{lat:p[0],lng:p[1]}}
+function toRad(d){return d*Math.PI/180}function toDeg(r){return r*180/Math.PI}
+function bearingDegrees(a,b){const lat1=toRad(a.lat),lat2=toRad(b.lat),dLng=toRad(b.lng-a.lng);const y=Math.sin(dLng)*Math.cos(lat2);const x=Math.cos(lat1)*Math.sin(lat2)-Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLng);return(toDeg(Math.atan2(y,x))+360)%360}
+function cardinalFromBearing(b){if(b>=337.5||b<22.5)return'north';if(b<67.5)return'northeast';if(b<112.5)return'east';if(b<157.5)return'southeast';if(b<202.5)return'south';if(b<247.5)return'southwest';if(b<292.5)return'west';return'northwest'}
+function offsetPoint(p,b,ft){const meters=ft*.3048,earth=6378137,ang=meters/earth,br=toRad(b),lat1=toRad(p.lat),lng1=toRad(p.lng);const lat2=Math.asin(Math.sin(lat1)*Math.cos(ang)+Math.cos(lat1)*Math.sin(ang)*Math.cos(br));const lng2=lng1+Math.atan2(Math.sin(br)*Math.sin(ang)*Math.cos(lat1),Math.cos(ang)-Math.sin(lat1)*Math.sin(lat2));return{lat:toDeg(lat2),lng:toDeg(lng2)}}
+function fmt(p){return p.lat.toFixed(6)+','+p.lng.toFixed(6)}
+function bufferedGps(a,b,buf){const s=parseLatLng(a),e=parseLatLng(b);if(!s||!e||!buf)return{start:a,end:b,ok:false};if(Math.abs(s.lat-e.lat)<.000001&&Math.abs(s.lng-e.lng)<.000001)return{start:a,end:b,ok:false};const br=bearingDegrees(s,e);return{start:fmt(offsetPoint(s,(br+180)%360,buf)),end:fmt(offsetPoint(e,br,buf)),ok:true}}
+function distanceFeet(a,b){const s=parseLatLng(a),e=parseLatLng(b);if(!s||!e)return'';const R=6371000,dLat=toRad(e.lat-s.lat),dLng=toRad(e.lng-s.lng);const x=Math.sin(dLat/2)**2+Math.cos(toRad(s.lat))*Math.cos(toRad(e.lat))*Math.sin(dLng/2)**2;return Math.round(R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))*3.28084)}
+function autoAssignZones(render=true){locations=locations.map(item=>{const l=item.location.toLowerCase();let z='Zone D - Other Work Areas';if(l.includes('burnley')||l.includes('prescott')||l.includes('wembley'))z='Zone A - Burnley / Prescott / Wembley';if(l.includes('bonny bank')||l.includes('lindsay'))z='Zone B - Bonny Bank / Lindsay Gardens';if(l.includes('wakefield')||l.includes('darcy'))z='Zone C - Wakefield / Darcy';if(l.includes('broughton')||l.includes('telford')||l.includes('kirkfield')||l.includes('birmington'))z='Zone D - Broughton / Kirkfield / Birmington';return{...item,zone:z}});if(render){renderLocations();renderSummary();updateZoneSelect()}}
+function loadGoogleMaps(key){if(window.google&&window.google.maps&&window.google.maps.Geocoder)return Promise.resolve();if(googleMapsLoadPromise)return googleMapsLoadPromise;googleMapsLoadPromise=new Promise((res,rej)=>{const cb='initKkeMaps_'+Date.now();window[cb]=()=>{delete window[cb];res()};const s=document.createElement('script');s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&callback=${cb}`;s.async=true;s.defer=true;s.onerror=()=>rej(new Error('Google Maps failed to load'));document.head.appendChild(s)});return googleMapsLoadPromise}
 function cleanGoogleIntersectionName(formattedAddress){
   let text = String(formattedAddress || '').trim();
 
@@ -868,7 +612,6 @@ function isReasonableRouteDistance(feet){
   return n > 25 && n <= 5000;
 }
 
-
 function getRouteStreetNameFromReverseResults(results){
   if(!results || !results.length) return '';
 
@@ -940,8 +683,6 @@ function shouldAutoFindIntersection(item){
   return false;
 }
 
-
-
 function buildFallbackRouteDirections(item){
   const fromName = normalizeIntersectionForUse(item.driveFrom || item.nearestIntersection || '');
   const beginGps = item.gpsStart || '';
@@ -972,7 +713,6 @@ function buildFallbackRouteDirections(item){
 
   return 'ROUTE NEEDS REVIEW: Could not geocode nearest intersection. Verify Drive From / Drive From GPS before submitting.';
 }
-
 
 async function getRouteDirectionsFromGoogle(originGps,destinationGps,apiKey){
   const origin=parseLatLng(originGps);
@@ -1051,234 +791,106 @@ function summarizeGoogleRoute(route,destinationGps){
   return '';
 }
 
+async function generateCoordinatesForAll(){clearGpsLog();const key=getVal('googleApiKey').trim();if(!key)return alert('Paste Google Maps API key first.');gpsLog('Loading Google Maps...');try{await loadGoogleMaps(key)}catch(e){gpsLog(e.message);return alert('Google Maps failed to load.')}const geocoder=new google.maps.Geocoder();for(let i=0;i<locations.length;i++){await generateCoordinatesForRow(i,geocoder)}renderLocations();renderSummary();gpsLog('Finished GPS generation.');alert('GPS generation complete.')}
+function geocodeAddress(address,geocoder){return new Promise(resolve=>{gpsLog('Geocoding: '+address);geocoder.geocode({address},(results,status)=>{gpsLog('Google status: '+status);if(status!=='OK'||!results||!results.length)return resolve('');const loc=results[0].geometry.location;resolve(loc.lat().toFixed(6)+','+loc.lng().toFixed(6))})})}
+async function generateCoordinatesForRow(i,geocoder){const item=locations[i];if(!item)return;if(!item.gpsStart&&item.startPoint)item.gpsStart=await geocodeAddress(item.startPoint,geocoder);if(!item.gpsEnd&&item.endPoint)item.gpsEnd=await geocodeAddress(item.endPoint,geocoder)}
+function renderSummary(){const s=$('summary');if(!locations.length){s.className='empty';s.textContent='No locations extracted yet.';return}const zones=[...new Set(locations.map(x=>x.zone||'Unassigned'))];s.className='';s.innerHTML=`<span class="pill">${locations.length} work locations</span><span class="pill">${zones.length} locate zones</span><span class="pill">${locations.filter(x=>x.gpsStart&&x.gpsEnd).length} GPS complete</span>`}
+function renderLocations(){const c=$('locationsTable');if(!locations.length){c.className='empty';c.textContent='No locations extracted yet.';return}c.className='scroll-wrap';c.innerHTML=`<table><thead><tr><th>Zone</th><th>Location</th><th>Intersection</th><th>Start</th><th>End</th><th>Direction</th><th>LF</th><th>Side</th><th>GPS Start</th><th>GPS End</th><th>Status</th><th></th></tr></thead><tbody>${locations.map((it,i)=>`<tr><td><input value="${esc(it.zone)}" onchange="updateField(${i},'zone',this.value)"></td><td><input value="${esc(it.location)}" onchange="updateField(${i},'location',this.value)"></td><td><input value="${esc(it.nearestIntersection)}" onchange="updateField(${i},'nearestIntersection',this.value)"></td><td><input value="${esc(it.startPoint)}" onchange="updateField(${i},'startPoint',this.value)"></td><td><input value="${esc(it.endPoint)}" onchange="updateField(${i},'endPoint',this.value)"></td><td><input value="${esc(it.direction)}" onchange="updateField(${i},'direction',this.value)"></td><td><input value="${esc(it.linearFeet)}" onchange="updateField(${i},'linearFeet',this.value)"></td><td><select onchange="updateField(${i},'sideOfRoad',this.value)">${['Both Sides','North Side','South Side','East Side','West Side','Across Street'].map(o=>`<option ${it.sideOfRoad===o?'selected':''}>${o}</option>`).join('')}</select></td><td><input value="${esc(it.gpsStart)}" onchange="updateField(${i},'gpsStart',this.value)"></td><td><input value="${esc(it.gpsEnd)}" onchange="updateField(${i},'gpsEnd',this.value)"></td><td><span class="status ${it.gpsStart&&it.gpsEnd?'gps-ok':''}">${it.gpsStart&&it.gpsEnd?'GPS Ready':'Draft'}</span></td><td><button class="btn-danger" onclick="deleteRow(${i})">Remove</button></td></tr>`).join('')}</tbody></table>`}
+function esc(v){return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
+function updateField(i,f,v){locations[i][f]=v;renderSummary();updateZoneSelect()}function deleteRow(i){locations.splice(i,1);renderLocations();renderSummary();updateZoneSelect()}function addManualRow(){locations.push({id:Date.now(),zone:'Unassigned',location:'',county:getVal('county'),methodTypes:['Method'],dimensions:'',notes:'',nearestIntersection:'',startPoint:'',endPoint:'',direction:'',linearFeet:'',locateWidth:'15 ft each side of work area',sideOfRoad:'Both Sides',gpsStart:'',gpsEnd:'',status:'Draft'});renderLocations();renderSummary();updateZoneSelect()}
+function updateZoneSelect(){const z=[...new Set(locations.map(x=>x.zone||'Unassigned'))];$('zoneSelect').innerHTML=z.map(x=>`<option>${esc(x)}</option>`).join('')}
+function isAddressLike(value){
+  const text = String(value || '').trim();
+  if(!text) return false;
 
-async function generateCoordinatesForAll(){
-  clearGpsLog();
+  // Normal street address or address range.
+  if(/\b\d{3,6}\s*[-–]\s*\d{3,6}\s+[A-Za-z]/.test(text)) return true;
+  if(/\b\d{3,6}\s+[A-Za-z]/.test(text)) return true;
 
-  const key = val('googleApiKey').trim();
-  if(!key){
-    alert('Paste Google Maps API key first.');
-    return;
-  }
-
-  try{
-    gpsLog('Loading Google Maps...');
-    await loadGoogleMaps(key);
-  }catch(error){
-    gpsLog(error.message);
-    alert('Google Maps failed to load.');
-    return;
-  }
-
-  const geocoder = new google.maps.Geocoder();
-
-  for(let i=0; i<locations.length; i++){
-    const item = locations[i];
-
-    if(!item.gpsStart && item.startPoint){
-      item.gpsStart = await geocodeAddress(item.startPoint,geocoder);
-    }
-
-    if(!item.gpsEnd && item.endPoint){
-      item.gpsEnd = await geocodeAddress(item.endPoint,geocoder);
-    }
-
-    if(item.gpsStart && shouldAutoFindIntersection(item)){
-      const autoIntersection = await reverseGeocodeForNearestIntersection(item.gpsStart,geocoder);
-
-      const cleanedIntersection = normalizeIntersectionForUse(autoIntersection);
-      if(cleanedIntersection){
-        item.nearestIntersection = cleanedIntersection;
-        item.driveFrom = cleanedIntersection;
-      }else if(looksLikeStreetAddressOnly(item.nearestIntersection)){
-        item.nearestIntersection = '';
-        item.driveFrom = '';
-      }
-    }
-
-    if(!item.driveFrom){
-      item.driveFrom = item.nearestIntersection || '';
-    }
-
-    if(!item.driveFromGps && item.driveFrom){
-      const driveFromAddress = item.driveFrom;
-      item.driveFromGps = await geocodeAddress(driveFromAddress,geocoder);
-    }
-
-    if(item.driveFromGps && item.gpsStart){
-      const calculatedToBegin = distanceFeet(item.driveFromGps,item.gpsStart);
-
-      if(isReasonableRouteDistance(calculatedToBegin)){
-        item.distanceToBeginFeet = String(calculatedToBegin);
-      }else{
-        item.distanceToBeginFeet = '';
-      }
-
-      if(!normalizeIntersectionForUse(item.driveFrom || item.nearestIntersection)){
-        item.routeDirections = buildFallbackRouteDirections(item);
-      }else if(!item.routeDirections){
-        let googleRouteText='';
-        if(isReasonableRouteDistance(calculatedToBegin)){
-          googleRouteText = await getRouteDirectionsFromGoogle(item.driveFromGps,item.gpsStart,key);
-        }
-        item.routeDirections = googleRouteText || buildFallbackRouteDirections(item);
-      }
-    }
-  }
-
-  renderLocations();
-  renderSummary();
-  gpsLog('Finished GPS generation.');
-  alert('GPS generation complete.');
+  return false;
 }
 
-function renderSummary(){
-  const summary = el('summary');
+function isIntersectionLike(value){
+  const text = String(value || '').trim().toLowerCase();
+  if(!text) return false;
+  if(text.includes('nearest intersection')) return false;
+  if(text.includes('needs review')) return false;
+  if(looksLikeStreetAddressOnly(text)) return false;
 
-  if(!locations.length){
-    summary.className = 'empty';
-    summary.textContent = 'No locations extracted yet.';
-    return;
+  return text.includes('&') || text.includes(' at ');
+}
+
+function hasUsableLocateReference(item){
+  return isAddressLike(item.startPoint || item.location) || isIntersectionLike(item.nearestIntersection);
+}
+
+function shouldUseDrivingDirections(item){
+  // Driving directions are only needed when there is no usable address/intersection reference.
+  return !hasUsableLocateReference(item);
+}
+
+function buildConciseWorkInstruction(items){
+  const workAreas = [...new Set(items.map(formatWorkAreaName).filter(Boolean))];
+
+  if(!workAreas.length){
+    return 'Concrete lifting and stabilization. Locate utilities within the described roadway, curb line, sidewalk, and adjacent right-of-way limits.';
   }
 
-  const zones = [...new Set(locations.map(x => x.zone || 'Unassigned'))];
-
-  summary.className = '';
-  summary.innerHTML =
-    `<span class="pill">${locations.length} work locations</span>` +
-    `<span class="pill">${zones.length} locate zones</span>` +
-    `<span class="pill">${locations.filter(x => x.gpsStart && x.gpsEnd).length} GPS complete</span>`;
-}
-
-function renderLocations(){
-  const container = el('locationsTable');
-
-  if(!locations.length){
-    container.className = 'empty';
-    container.textContent = 'No locations extracted yet.';
-    return;
+  if(workAreas.length === 1){
+    return 'Concrete lifting and stabilization near ' + workAreas[0] + '. Locate roadway panels, curb line, sidewalk, and adjacent right-of-way within the described limits.';
   }
 
-  container.className = 'scroll-wrap';
-  container.innerHTML = `
-    <table>
-      <thead>
-        <tr>
-          <th>Zone</th>
-          <th>Location</th>
-          <th>Intersection</th>
-          <th>Drive From</th>
-          <th>Drive From GPS</th>
-          <th>To Begin LF</th>
-          <th>Route Directions</th>
-          <th>Start</th>
-          <th>End</th>
-          <th>Direction</th>
-          <th>LF</th>
-          <th>Side</th>
-          <th>GPS Start</th>
-          <th>GPS End</th>
-          <th>Status</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        ${locations.map((item,index) => `
-          <tr>
-            <td><input value="${escapeHtml(item.zone)}" onchange="updateField(${index},'zone',this.value)"></td>
-            <td><input value="${escapeHtml(item.location)}" onchange="updateField(${index},'location',this.value)"></td>
-            <td><input value="${escapeHtml(item.nearestIntersection)}" onchange="updateField(${index},'nearestIntersection',this.value)"></td>
-            <td><input value="${escapeHtml(item.driveFrom || item.nearestIntersection || '')}" onchange="updateField(${index},'driveFrom',this.value)"></td>
-            <td><input value="${escapeHtml(item.driveFromGps || '')}" onchange="updateField(${index},'driveFromGps',this.value)"></td>
-            <td><input value="${escapeHtml(item.distanceToBeginFeet || '')}" onchange="updateField(${index},'distanceToBeginFeet',this.value)"></td>
-            <td><input value="${escapeHtml(item.routeDirections || '')}" onchange="updateField(${index},'routeDirections',this.value)"></td>
-            <td><input value="${escapeHtml(item.startPoint)}" onchange="updateField(${index},'startPoint',this.value)"></td>
-            <td><input value="${escapeHtml(item.endPoint)}" onchange="updateField(${index},'endPoint',this.value)"></td>
-            <td><input value="${escapeHtml(item.direction)}" onchange="updateField(${index},'direction',this.value)"></td>
-            <td><input value="${escapeHtml(item.linearFeet)}" onchange="updateField(${index},'linearFeet',this.value)"></td>
-            <td>
-              <select onchange="updateField(${index},'sideOfRoad',this.value)">
-                ${['Both Sides','North Side','South Side','East Side','West Side','Across Street'].map(option =>
-                  `<option value="${option}" ${item.sideOfRoad===option?'selected':''}>${option}</option>`
-                ).join('')}
-              </select>
-            </td>
-            <td><input value="${escapeHtml(item.gpsStart)}" onchange="updateField(${index},'gpsStart',this.value)"></td>
-            <td><input value="${escapeHtml(item.gpsEnd)}" onchange="updateField(${index},'gpsEnd',this.value)"></td>
-            <td><span class="status ${item.gpsStart && item.gpsEnd ? 'gps-ok' : ''}">${item.gpsStart && item.gpsEnd ? 'GPS Ready' : 'Draft'}</span></td>
-            <td><button class="btn-danger" onclick="deleteRow(${index})">Remove</button></td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-  `;
+  return 'Concrete lifting and stabilization at the listed work areas. Locate roadway panels, curb line, sidewalk, and adjacent right-of-way within the described limits.';
 }
 
-function updateField(index,field,value){
-  locations[index][field] = value;
-  renderSummary();
-  updateZoneSelect();
+function buildGpsLimitLine(item,index,bufferFeet){
+  const buffered = bufferedGps(item.gpsStart,item.gpsEnd,bufferFeet);
+  const startGps = item.gpsStart ? buffered.start : '';
+  const endGps = item.gpsEnd ? buffered.end : '';
+  const side = item.sideOfRoad || 'Both Sides';
+  const width = item.locateWidth || '15 ft each side of work area';
+
+  if(startGps && endGps && startGps !== endGps){
+    const feet = distanceFeet(startGps,endGps) || item.linearFeet || 'field-measured';
+    let direction = item.direction || 'along roadway';
+
+    const startPoint = parseLatLng(startGps);
+    const endPoint = parseLatLng(endGps);
+    if(startPoint && endPoint){
+      direction = cardinalFromBearing(bearingDegrees(startPoint,endPoint));
+    }
+
+    return `${index+1}. BEGIN GPS ${startGps}. Continue approximately ${feet} LF ${direction} to END GPS ${endGps}. Locate width: ${width}. Side: ${side}.`;
+  }
+
+  if(startGps){
+    return `${index+1}. GPS POINT ${startGps}. Locate the described work area around this point. Locate width: ${width}. Side: ${side}.`;
+  }
+
+  return `${index+1}. GPS NEEDS REVIEW for ${formatWorkAreaName(item) || item.location || 'work area'}. Locate width: ${width}. Side: ${side}.`;
 }
 
-function deleteRow(index){
-  locations.splice(index,1);
-  renderLocations();
-  renderSummary();
-  updateZoneSelect();
+function buildDrivingDirectionLine(item,index,bufferFeet){
+  const buffered = bufferedGps(item.gpsStart,item.gpsEnd,bufferFeet);
+  const startGps = item.gpsStart ? buffered.start : '';
+  const endGps = item.gpsEnd ? buffered.end : '';
+
+  const firstLeg = buildIntersectionToBeginDirections(item,startGps);
+  const secondLeg = buildBeginToEndDirections(item,startGps,endGps);
+
+  return `${index+1}. ${firstLeg}\n   ${secondLeg}`;
 }
 
-function addManualRow(){
-  locations.push({
-    id:String(Date.now()),
-    zone:'Unassigned',
-    location:'',
-    county:val('county'),
-    methodTypes:['Method'],
-    dimensions:'',
-    notes:'',
-    nearestIntersection:'',
-    driveFrom:'',
-    driveFromGps:'',
-    distanceToBeginFeet:'',
-    routeDirections:'',
-    startPoint:'',
-    endPoint:'',
-    direction:'',
-    linearFeet:'',
-    locateWidth:'15 ft each side of work area',
-    sideOfRoad:'Both Sides',
-    gpsStart:'',
-    gpsEnd:'',
-    status:'Draft'
+function buildAddressWorkAreaLines(items){
+  const lines = items.map(function(item,index){
+    const area = formatWorkAreaName(item) || item.location || 'Work area needs review';
+    const intersection = normalizeIntersectionForUse(item.nearestIntersection || '') || 'Nearest intersection needs review';
+    const side = item.sideOfRoad || 'Both Sides';
+    return `${index+1}. ${area}. Nearest intersection: ${intersection}. Side of roadway: ${side}.`;
   });
 
-  renderLocations();
-  renderSummary();
-  updateZoneSelect();
+  return lines.join('\n');
 }
-
-function updateZoneSelect(){
-  const select = el('zoneSelect');
-  const zones = [...new Set(locations.map(x => x.zone || 'Unassigned'))];
-  select.innerHTML = zones.map(zone => `<option value="${escapeHtml(zone)}">${escapeHtml(zone)}</option>`).join('');
-}
-
-function formatWorkAreaName(item){
-  const start = stripCityState(item.startPoint || '');
-  const end = stripCityState(item.endPoint || '');
-  const location = stripCityState(item.location || '');
-
-  if(start && end && start !== end) return start + ' to ' + end;
-  return start || location;
-}
-
-function stripCityState(value){
-  return String(value || '')
-    .replace(', The Colony, TX','')
-    .replace(', TX','')
-    .trim();
-}
-
 
 function buildIntersectionToBeginDirections(item,bufferedStart){
   const fromName = normalizeIntersectionForUse(item.driveFrom || item.nearestIntersection || '');
@@ -1332,29 +944,21 @@ function buildBeginToEndDirections(item,bufferedStart,bufferedEnd){
   return `From BEGIN LOCATE, continue approximately ${distance} LF ${direction} to END LOCATE at GPS ${end}.`;
 }
 
-
 function buildLocateText(zone,items){
-  const city = val('city');
-  const county = val('county');
-  const workFor = val('workDoneFor');
-  const defaultLane = val('defaultLane');
-  const bufferFeet = parseInt(val('locateBuffer') || '20',10) || 0;
+  const city = getVal('city');
+  const county = getVal('county');
+  const workFor = getVal('workDoneFor');
+  const bufferFeet = parseInt(getVal('locateBuffer') || '20',10) || 0;
 
-  const workAreas = [...new Set(items.map(formatWorkAreaName).filter(Boolean))].join('; ');
+  const workAreas = [...new Set(items.map(formatWorkAreaName).filter(Boolean))].join('; ') || 'Work area needs review.';
   const intersections = [...new Set(items.map(item => normalizeIntersectionForUse(item.nearestIntersection)).filter(Boolean))].join('; ') || 'Nearest intersection needs review.';
 
-  const lines = items.map((item,index) => {
-    const buffered = bufferedGps(item.gpsStart,item.gpsEnd,bufferFeet);
-    const bufferedStart = item.gpsStart ? buffered.start : '';
-    const bufferedEnd = item.gpsEnd ? buffered.end : '';
+  const addressStyleItems = items.filter(item => !shouldUseDrivingDirections(item));
+  const gpsOnlyItems = items.filter(item => shouldUseDrivingDirections(item));
 
-    const lineOne = buildIntersectionToBeginDirections(item,bufferedStart);
-    const lineTwo = buildBeginToEndDirections(item,bufferedStart,bufferedEnd);
-    const locateWidth = item.locateWidth || '15 ft each side of work area';
-    const side = item.sideOfRoad || 'Both Sides';
-
-    return `${index+1}. ${lineOne}\n   ${lineTwo}\n   Locate width: ${locateWidth}. Side of roadway: ${side}.`;
-  }).join('\n');
+  const addressLines = addressStyleItems.length ? buildAddressWorkAreaLines(addressStyleItems) : '';
+  const gpsLimits = items.map((item,index) => buildGpsLimitLine(item,index,bufferFeet)).join('\n');
+  const drivingDirections = gpsOnlyItems.map((item,index) => buildDrivingDirectionLine(item,index,bufferFeet)).join('\n');
 
   return `TEXAS811 LOCATE REQUEST
 
@@ -1369,362 +973,33 @@ ${workAreas}
 NEAREST INTERSECTION(S)
 ${intersections}
 
-WORK DESCRIPTION
-Concrete lifting and stabilization. Request utility markings within ${defaultLane}.
+WORK SITE LOCATE INSTRUCTIONS
+${buildConciseWorkInstruction(items)}
 
-LOCATE LIMITS / DIRECTIONS
-${lines}
+${addressLines ? `LOCATION REFERENCES\n${addressLines}\n\n` : ''}GPS LIMITS
+${gpsLimits}
 
-LOCATOR NOTES
-- Mark all utilities within the described start/stop limits.
-- Include both sides of the roadway where applicable.
-- GPS start/end points include a ${bufferFeet} ft buffer before and after the work area.\n- If BEGIN and END GPS are the same or very close, locate the described area around that point and field verify limits.`;
+${drivingDirections ? `DRIVING DIRECTIONS TO WORK SITE\n${drivingDirections}\n\n` : ''}LOCATOR NOTES
+- Mark all utilities within the described work limits.
+- Include both sides of roadway where applicable.
+- GPS points are supplied as support for the locate limits.
+- Driving directions are only included for GPS-only or hard-to-address work areas.`;
 }
 
 function generateLocateForSelectedZone(){
-  const zone = val('zoneSelect');
-  const zoneItems = locations.filter(x => (x.zone || 'Unassigned') === zone);
-  generatedLocateText = buildLocateText(zone,zoneItems);
+  const z=getVal('zoneSelect');
+  window.generatedLocateText=buildLocateText(z,locations.filter(x=>(x.zone||'Unassigned')===z));
   updateLocatePreview();
-  setStatus('Generated locate text. Review below, then click Copy Locate Text.');
-}
-
-function generateAllZones(){
-  const zones = [...new Set(locations.map(x => x.zone || 'Unassigned'))];
-
-  generatedLocateText = zones.map(zone => {
-    const zoneItems = locations.filter(x => (x.zone || 'Unassigned') === zone);
-    return buildLocateText(zone,zoneItems);
-  }).join('\n\n------------------------------\n\n');
-
+  setCopyStatus('Generated locate text. Review below, then click Copy Locate Text.');
+}function generateAllZones(){
+  const z=[...new Set(locations.map(x=>x.zone||'Unassigned'))];
+  window.generatedLocateText=z.map(zone=>buildLocateText(zone,locations.filter(x=>(x.zone||'Unassigned')===zone))).join('\n\n------------------------------\n\n');
   updateLocatePreview();
-  setStatus(`Generated ${zones.length} zone(s). Review below, then click Copy Locate Text.`);
+  setCopyStatus(`Generated ${z.length} zone(s). Review below, then click Copy Locate Text.`);
 }
-
-function copyLocateText(){
-  if(!generatedLocateText){
-    alert('Generate locate wording first.');
-    return;
-  }
-
-  navigator.clipboard.writeText(generatedLocateText).then(() => {
-    alert('Locate text copied.');
-  });
-}
-
-function getProjectState(){
-  return {
-    projectName:val('projectName'),
-    city:val('city'),
-    county:val('county'),
-    poNumber:val('poNumber'),
-    workDoneFor:val('workDoneFor'),
-    duration:val('duration'),
-    defaultLane:val('defaultLane'),
-    locateBuffer:val('locateBuffer'),
-    estimateText:val('estimateText'),
-    globalDirections:val('globalDirections'),
-    locations
-  };
-}
-
-function applyProjectState(state){
-  if(!state) return;
-
-  ['projectName','city','county','poNumber','workDoneFor','duration','defaultLane','locateBuffer','estimateText','globalDirections'].forEach(id => {
-    if(el(id)) el(id).value = state[id] || '';
-  });
-
-  locations = Array.isArray(state.locations) ? state.locations : [];
-  generatedLocateText = '';
-  renderLocations();
-  renderSummary();
-  updateZoneSelect();
-  updateLocatePreview();
-}
-
-function saveProject(){
-  localStorage.setItem('kkeLocateBuilder:lastProject',JSON.stringify(getProjectState()));
-  alert('Project saved.');
-}
-
-function loadProject(){
-  const raw = localStorage.getItem('kkeLocateBuilder:lastProject');
-  if(!raw){
-    alert('No saved project found.');
-    return;
-  }
-
-  applyProjectState(JSON.parse(raw));
-}
-
-function clearAll(){
-  locations = [];
-  generatedLocateText = '';
-  el('estimateText').value = '';
-  renderLocations();
-  renderSummary();
-  updateZoneSelect();
-  updateLocatePreview();
-  setStatus('No locate text generated yet.');
-  clearGpsLog();
-}
-
-
-
-async function generateRouteDirectionsForAll(){
-  clearGpsLog();
-
-  const key = val('googleApiKey').trim();
-  if(!key){
-    alert('Paste Google Maps API key first.');
-    return;
-  }
-
-  for(let i=0; i<locations.length; i++){
-    const item = locations[i];
-
-    if(!item.driveFrom){
-      item.driveFrom = item.nearestIntersection || '';
-    }
-
-    if(item.driveFromGps && item.gpsStart){
-      const calculatedToBegin = distanceFeet(item.driveFromGps,item.gpsStart);
-
-      if(calculatedToBegin && calculatedToBegin > 25){
-        item.distanceToBeginFeet = String(calculatedToBegin);
-      }
-
-      let googleRouteText = '';
-      if(calculatedToBegin && calculatedToBegin > 25){
-        googleRouteText = await getRouteDirectionsFromGoogle(item.driveFromGps,item.gpsStart,key);
-      }
-
-      item.routeDirections = googleRouteText || buildFallbackRouteDirections(item);
-    }else{
-      item.routeDirections = buildFallbackRouteDirections(item);
-    }
-  }
-
-  renderLocations();
-  gpsLog('Finished generating route directions.');
-  alert('Route direction generation complete. Review the Route Directions column.');
-}
-
-
-async function autoFindIntersectionsForAll(){
-  clearGpsLog();
-
-  const key = val('googleApiKey').trim();
-  if(!key){
-    alert('Paste Google Maps API key first.');
-    return;
-  }
-
-  try{
-    gpsLog('Loading Google Maps...');
-    await loadGoogleMaps(key);
-  }catch(error){
-    gpsLog(error.message);
-    alert('Google Maps failed to load.');
-    return;
-  }
-
-  const geocoder = new google.maps.Geocoder();
-
-  for(let i=0; i<locations.length; i++){
-    const item = locations[i];
-
-    if(!item.gpsStart && item.startPoint){
-      item.gpsStart = await geocodeAddress(item.startPoint,geocoder);
-    }
-
-    if(item.gpsStart && shouldAutoFindIntersection(item)){
-      const autoIntersection = await reverseGeocodeForNearestIntersection(item.gpsStart,geocoder);
-
-      const cleanedIntersection = normalizeIntersectionForUse(autoIntersection);
-      if(cleanedIntersection){
-        item.nearestIntersection = cleanedIntersection;
-        item.driveFrom = cleanedIntersection;
-      }else if(looksLikeStreetAddressOnly(item.nearestIntersection)){
-        item.nearestIntersection = '';
-        item.driveFrom = '';
-      }
-    }
-
-    if(!item.driveFrom){
-      item.driveFrom = item.nearestIntersection || '';
-    }
-
-    if(!item.driveFromGps && item.driveFrom){
-      item.driveFromGps = await geocodeAddress(item.driveFrom,geocoder);
-    }
-
-    if(item.driveFromGps && item.gpsStart){
-      const calculatedToBegin = distanceFeet(item.driveFromGps,item.gpsStart);
-      if(calculatedToBegin && calculatedToBegin > 25){
-        item.distanceToBeginFeet = String(calculatedToBegin);
-      }
-
-      if(!item.routeDirections){
-        let googleRouteText='';
-        if(calculatedToBegin && calculatedToBegin > 25){
-          googleRouteText = await getRouteDirectionsFromGoogle(item.driveFromGps,item.gpsStart,key);
-        }
-        item.routeDirections = googleRouteText || buildFallbackRouteDirections(item);
-      }
-    }
-  }
-
-  renderLocations();
-  renderSummary();
-  gpsLog('Finished auto-finding intersections.');
-  alert('Intersection lookup complete. Review rows before submitting.');
-}
-
-
-function downloadCsv(){
-  if(!locations.length){
-    alert('No locations to download.');
-    return;
-  }
-
-  const headers = ['Zone','Location','Intersection','Drive From','Drive From GPS','To Begin LF','Route Directions','Start','End','Direction','LF','Side','GPS Start','GPS End'];
-  const rows = locations.map(item => [
-    item.zone,
-    item.location,
-    item.nearestIntersection,
-    item.driveFrom || '',
-    item.driveFromGps || '',
-    item.distanceToBeginFeet || '',
-    item.routeDirections || '',
-    item.startPoint,
-    item.endPoint,
-    item.direction,
-    item.linearFeet,
-    item.sideOfRoad,
-    item.gpsStart,
-    item.gpsEnd
-  ]);
-
-  const csv = [headers,...rows]
-    .map(row => row.map(cell => `"${String(cell || '').replace(/"/g,'""')}"`).join(','))
-    .join('\n');
-
-  const blob = new Blob([csv],{type:'text/csv'});
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'kke-texas811-locates.csv';
-  link.click();
-  URL.revokeObjectURL(url);
-}
-
-async function handlePdfUpload(event){
-  const file = event.target.files && event.target.files[0];
-  if(!file) return;
-
-  if(!window.pdfjsLib){
-    alert('PDF parser failed to load.');
-    return;
-  }
-
-  try{
-    const buffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({data:buffer}).promise;
-    let text = '';
-
-    for(let pageNumber=1; pageNumber<=pdf.numPages; pageNumber++){
-      const page = await pdf.getPage(pageNumber);
-      const content = await page.getTextContent();
-      text += '\n\n--- PAGE ' + pageNumber + ' ---\n' + content.items.map(item => item.str).join(' ');
-    }
-
-    el('estimateText').value = text.trim();
-    parseEstimate();
-    alert(`PDF extracted. Found ${locations.length} work location(s).`);
-  }catch(error){
-    console.error(error);
-    alert('PDF extraction failed. Try paste text instead.');
-  }
-}
-
-
-function runAppCheck(){
-  const results = [];
-
-  results.push(typeof parseEstimate === 'function' ? '✅ Parser function loaded' : '❌ Parser function missing');
-  results.push(typeof generateCoordinatesForAll === 'function' ? '✅ GPS function loaded' : '❌ GPS function missing');
-  results.push(typeof generateAllZones === 'function' ? '✅ Locate generation function loaded' : '❌ Locate generation function missing');
-  results.push(typeof getRouteDirectionsFromGoogle === 'function' ? '✅ Routes helper loaded' : '❌ Routes helper missing');
-  results.push(typeof reverseGeocodeForNearestIntersection === 'function' ? '✅ Nearest intersection helper loaded' : '❌ Nearest intersection helper missing');
-  results.push(typeof buildFallbackRouteDirections === 'function' ? '✅ Route fallback helper loaded' : '❌ Route fallback helper missing');
-  results.push(simplifyIntersectionText('Broughton & Telford; 3408-3568 Kirkfield Ct, The Colony, TX 75056') === 'Broughton & Telford' ? '✅ Intersection cleanup passed' : '❌ Intersection cleanup failed');
-  results.push(!normalizeIntersectionForUse('2999-2923 Prescott') ? '✅ Address range rejection passed' : '❌ Address range rejection failed');
-  results.push(el('locatePreview') ? '✅ Locate preview panel found' : '❌ Locate preview panel missing');
-  results.push(el('locationsTable') ? '✅ Locations table found' : '❌ Locations table missing');
-
-  const oldText = val('estimateText');
-  const oldLocations = JSON.parse(JSON.stringify(locations));
-
-  try{
-    el('estimateText').value = sampleText;
-    parseEstimate();
-
-    if(locations.length > 0){
-      results.push(`✅ Sample extraction passed: ${locations.length} location(s) found`);
-    }else{
-      results.push('❌ Sample extraction failed: 0 locations found');
-    }
-
-    generatedLocateText = buildLocateText(locations[0].zone || 'Test Zone',locations.slice(0,1));
-    updateLocatePreview();
-
-    if(generatedLocateText.includes('TEXAS811 LOCATE REQUEST')){
-      results.push('✅ Locate text generation passed');
-    }else{
-      results.push('❌ Locate text generation failed');
-    }
-  }catch(error){
-    results.push('❌ App check error: ' + error.message);
-  }
-
-  el('estimateText').value = oldText;
-  locations = oldLocations;
-  renderLocations();
-  renderSummary();
-  updateZoneSelect();
-
-  const report = results.join('\n');
-  generatedLocateText = report;
-  updateLocatePreview();
-  setStatus('App check complete. Review results below.');
-}
-
-function attachEvents(){
-  el('extractBtn').addEventListener('click',parseEstimate);
-  el('sampleBtn').addEventListener('click',loadTributeExample);
-  el('saveBtn').addEventListener('click',saveProject);
-  el('loadBtn').addEventListener('click',loadProject);
-  el('clearBtn').addEventListener('click',clearAll);
-  el('manualBtn').addEventListener('click',addManualRow);
-  el('zoneBtn').addEventListener('click',() => autoAssignZones(true));
-  el('gpsBtn').addEventListener('click',generateCoordinatesForAll);
-  el('intersectionBtn').addEventListener('click',autoFindIntersectionsForAll);
-  el('routeBtn').addEventListener('click',generateRouteDirectionsForAll);
-  el('csvBtn').addEventListener('click',downloadCsv);
-  el('genSelectedBtn').addEventListener('click',generateLocateForSelectedZone);
-  el('genAllBtn').addEventListener('click',generateAllZones);
-  el('copyBtn').addEventListener('click',copyLocateText);
-  el('appCheckBtn').addEventListener('click',runAppCheck);
-  el('pdfUpload').addEventListener('change',handlePdfUpload);
-}
-
-if(window.pdfjsLib){
-  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-}
-
-document.addEventListener('DOMContentLoaded',attachEvents);
+function copyLocateText(){if(!window.generatedLocateText)return alert('Generate locate wording first.');navigator.clipboard.writeText(window.generatedLocateText).then(()=>alert('Locate text copied.'))}
+function getProjectState(){return{projectName:getVal('projectName'),city:getVal('city'),county:getVal('county'),poNumber:getVal('poNumber'),workDoneFor:getVal('workDoneFor'),duration:getVal('duration'),defaultLane:getVal('defaultLane'),locateBuffer:getVal('locateBuffer'),estimateText:getVal('estimateText'),globalDirections:getVal('globalDirections'),locations}}function applyProjectState(s){if(!s)return;['projectName','city','county','poNumber','workDoneFor','duration','defaultLane','locateBuffer','estimateText','globalDirections'].forEach(id=>{if($(id))$(id).value=s[id]||''});locations=Array.isArray(s.locations)?s.locations:[];renderLocations();renderSummary();updateZoneSelect()}function saveProject(){localStorage.setItem('kkeLocateBuilder:lastProject',JSON.stringify(getProjectState()));alert('Project saved.')}function loadProject(){const raw=localStorage.getItem('kkeLocateBuilder:lastProject');if(!raw)return alert('No saved project found.');applyProjectState(JSON.parse(raw))}
+function downloadCsv(){if(!locations.length)return alert('No locations to download.');const headers=['Zone','Location','Intersection','Start','End','Direction','LF','Side','GPS Start','GPS End'];const rows=locations.map(i=>[i.zone,i.location,i.nearestIntersection,i.startPoint,i.endPoint,i.direction,i.linearFeet,i.sideOfRoad,i.gpsStart,i.gpsEnd]);const csv=[headers,...rows].map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='kke-texas811-locates.csv';a.click();URL.revokeObjectURL(url)}
 </script>
 </body>
 </html>
