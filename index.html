@@ -296,11 +296,77 @@ function isIntersectionLocate(item){
   const intersection = String(item.nearestIntersection || '');
   const combined = (location + ' ' + intersection).toLowerCase();
 
-  if(combined.includes('&')) return true;
-  if(combined.includes(' at ')) return true;
+  // Do NOT treat two house numbers on the same street/across the street
+  // as an intersection. Example:
+  // "3745 Birmington and across street at 3748 Birmington"
+  // is a frontage/address locate, not a 100-ft-each-direction intersection.
+  if(isAcrossStreetAddressPair(location)) return false;
+  if(isAcrossStreetAddressPair(intersection)) return false;
+
+  if(hasTwoStreetNamesWithoutHouseNumbers(location)) return true;
+  if(hasTwoStreetNamesWithoutHouseNumbers(intersection)) return true;
 
   return false;
 }
+
+function isAcrossStreetAddressPair(value){
+  const text = String(value || '').toLowerCase();
+
+  if(!text) return false;
+
+  const hasAcrossStreet = text.includes('across street') || text.includes('across the street');
+  const numbers = text.match(/\b\d{3,6}\b/g) || [];
+
+  if(hasAcrossStreet && numbers.length >= 2) return true;
+
+  // Also catch "3745 Birmington at 3748 Birmington" style text.
+  if(/\b\d{3,6}\b[^&]*\bat\b[^&]*\b\d{3,6}\b/i.test(value)) return true;
+
+  return false;
+}
+
+function hasTwoStreetNamesWithoutHouseNumbers(value){
+  const text = String(value || '').trim();
+
+  if(!text) return false;
+
+  // If there are two house numbers in the phrase, it is probably an address pair,
+  // not a street intersection.
+  const numbers = text.match(/\b\d{3,6}\b/g) || [];
+  if(numbers.length >= 2) return false;
+
+  const normalized = text
+    .replace(/\s+and\s+/gi,' & ')
+    .replace(/\s+at\s+/gi,' & ');
+
+  if(!normalized.includes('&')) return false;
+
+  const parts = normalized.split('&').map(function(part){
+    return part.trim();
+  }).filter(Boolean);
+
+  if(parts.length < 2) return false;
+
+  // Each side should look like a street name, not a house address.
+  return parts.slice(0,2).every(function(part){
+    return !/^\d{3,6}\s+/.test(part);
+  });
+}
+
+
+function cleanAcrossStreetAddressPairName(value){
+  let text = String(value || '').trim();
+  if(!text) return '';
+
+  text = text.replace(/acroos/gi,'across');
+  text = text.replace(/\s+and\s+across\s+street\s+at\s+/gi,' and across street from ');
+  text = text.replace(/\s+and\s+across\s+the\s+street\s+at\s+/gi,' and across street from ');
+  text = text.replace(/\s+at\s+to\s+/gi,' to ');
+  text = text.replace(/\s+/g,' ').trim();
+
+  return text;
+}
+
 
 function getIntersectionStreetNames(item){
   let source = normalizeIntersectionForUse(item.nearestIntersection || '') || item.location || '';
@@ -1593,12 +1659,18 @@ function buildLocateText(zone,items){
   const bufferFeet = parseInt(getVal('locateBuffer') || '20',10) || 0;
 
   const sections = items.map(function(item,index){
-    const workArea = formatWorkAreaName(item) || item.location || 'Work area needs review';
+    const workArea = cleanAcrossStreetAddressPairName(formatWorkAreaName(item) || item.location || 'Work area needs review');
 
     let intersection = normalizeIntersectionForUse(item.nearestIntersection || '');
+
+    if(isAcrossStreetAddressPair(item.location) || isAcrossStreetAddressPair(item.nearestIntersection)){
+      intersection = '';
+    }
+
     if(!intersection && isIntersectionLocate(item)){
       intersection = normalizeIntersectionForUse(item.location || '');
     }
+
     if(!intersection){
       intersection = 'Nearest intersection needs review';
     }
